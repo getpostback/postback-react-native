@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## 1.1.14 - 2026-07-14
+
+### Changed
+- The iOS-only `AppSprintAppleAds` facade now registers all installs and enables automatic session and event tracking, so ASO keys collect first-party analytics for organic users as well as Apple Ads users.
+- Updates the vendored iOS SDK to v1.1.11 with API-key scope isolation and compile-time macOS exclusion for the ASO facade.
+
 ## 1.1.13 - 2026-07-01
 
 ### Fixed

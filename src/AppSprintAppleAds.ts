@@ -24,9 +24,9 @@ class AppSprintAppleAdsSDK {
       enableAppleAdsAttribution: true,
       isDebug: config.isDebug ?? false,
       customerUserId: null,
-      autoTrackSessions: false,
+      autoTrackSessions: true,
       autoRefreshAttribution: false,
-      eventTrackingEnabled: false,
+      eventTrackingEnabled: true,
     });
   }
 

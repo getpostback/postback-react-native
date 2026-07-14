@@ -105,6 +105,10 @@ export default function App() {
 | `isDebug` | `boolean` | `false` | Forces debug-level logging on the native side. |
 | `logLevel` | `0 \| 1 \| 2 \| 3` | `2` | `0 = debug`, `1 = info`, `2 = warn`, `3 = error`. |
 
+ASO integrations may continue using `AppSprintAppleAds.configure(...)`. This
+facade remains iOS-only, keeps Apple Ads attribution enabled, and now also
+registers organic installs, automatic sessions, and events for all iOS users.
+
 ## Track events
 
 ```tsx

@@ -41,7 +41,7 @@ test("exports the documented public API", async () => {
   }
 });
 
-test("Apple Ads facade delegates locked iOS config", async () => {
+test("Apple Ads facade delegates all-user analytics iOS config", async () => {
   const ctx = createSdkTestContext();
 
   try {
@@ -60,9 +60,9 @@ test("Apple Ads facade delegates locked iOS config", async () => {
       enableAppleAdsAttribution: true,
       isDebug: true,
       customerUserId: null,
-      autoTrackSessions: false,
+      autoTrackSessions: true,
       autoRefreshAttribution: false,
-      eventTrackingEnabled: false,
+      eventTrackingEnabled: true,
     });
   } finally {
     ctx.restore();
