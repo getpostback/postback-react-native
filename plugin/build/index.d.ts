@@ -1,10 +1,10 @@
 import type { ConfigPlugin } from "@expo/config-plugins";
 
-export interface AppSprintExpoPluginProps {
+export interface PostbackExpoPluginProps {
   trackingDescription?: string;
   advertisingAttributionEndpoint?: string;
 }
 
-declare const withAppSprint: ConfigPlugin<AppSprintExpoPluginProps | void>;
+declare const withPostback: ConfigPlugin<PostbackExpoPluginProps | void>;
 
-export default withAppSprint;
+export default withPostback;

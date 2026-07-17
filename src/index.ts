@@ -1,12 +1,8 @@
-export { AppSprint } from "./AppSprint";
-export { AppSprintAppleAds } from "./AppSprintAppleAds";
-export { NativeAppSprint } from "./NativeAppSprint";
+export { Postback } from "./Postback";
+export { NativePostback } from "./NativePostback";
 export type {
-  AppSprintAppleAdsConfig,
-} from "./AppSprintAppleAds";
-export type {
-  AppSprintConfig,
-  AppSprintOptions,
+  PostbackConfig,
+  PostbackOptions,
   EventType,
   EventParams,
   AttributionResult,
@@ -14,5 +10,5 @@ export type {
   DeviceInfo,
   LogLevel,
   TestEventResult,
-  NativeAppSprintModule,
+  NativePostbackModule,
 } from "./types";

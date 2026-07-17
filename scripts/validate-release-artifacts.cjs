@@ -6,11 +6,11 @@ const path = require("node:path");
 const projectRoot = path.resolve(__dirname, "..");
 
 const requiredPaths = [
-  "android/libs/appsprint-sdk.aar",
-  "ios/AppSprintSDK.xcframework/ios-arm64/AppSprintSDK.framework/AppSprintSDK",
-  "ios/AppSprintSDK.xcframework/ios-arm64/dSYMs/AppSprintSDK.framework.dSYM/Contents/Resources/DWARF/AppSprintSDK",
-  "ios/AppSprintSDK.xcframework/ios-arm64_x86_64-simulator/AppSprintSDK.framework/AppSprintSDK",
-  "ios/AppSprintSDK.xcframework/ios-arm64_x86_64-simulator/dSYMs/AppSprintSDK.framework.dSYM/Contents/Resources/DWARF/AppSprintSDK",
+  "android/libs/postback-sdk.aar",
+  "ios/PostbackSDK.xcframework/ios-arm64/PostbackSDK.framework/PostbackSDK",
+  "ios/PostbackSDK.xcframework/ios-arm64/dSYMs/PostbackSDK.framework.dSYM/Contents/Resources/DWARF/PostbackSDK",
+  "ios/PostbackSDK.xcframework/ios-arm64_x86_64-simulator/PostbackSDK.framework/PostbackSDK",
+  "ios/PostbackSDK.xcframework/ios-arm64_x86_64-simulator/dSYMs/PostbackSDK.framework.dSYM/Contents/Resources/DWARF/PostbackSDK",
   "app.plugin.js",
   "plugin/build/index.js",
 ];
@@ -38,7 +38,7 @@ if (!pluginEntries.includes("./app.plugin.js")) {
 }
 
 const podspec = fs.readFileSync(
-  path.join(projectRoot, "appsprint-react-native.podspec"),
+  path.join(projectRoot, "postback-react-native.podspec"),
   "utf8"
 );
 
@@ -49,6 +49,21 @@ if (!podspec.includes(":git => repository_url")) {
 
 if (!podspec.includes(':tag => "v#{s.version}"')) {
   console.error("podspec source tag must match v-prefixed GitHub release tags.");
+  process.exit(1);
+}
+
+const androidGradle = fs.readFileSync(
+  path.join(projectRoot, "android", "build.gradle"),
+  "utf8"
+);
+
+if (!androidGradle.includes("rootProject.allprojects")) {
+  console.error("Android build must expose the vendored AAR repository to the host app.");
+  process.exit(1);
+}
+
+if (!androidGradle.includes("implementation(name: 'postback-sdk', ext: 'aar')")) {
+  console.error("Android build must consume the vendored core SDK as a module dependency.");
   process.exit(1);
 }
 

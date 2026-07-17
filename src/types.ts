@@ -1,6 +1,6 @@
-export interface AppSprintConfig {
+export interface PostbackConfig {
   apiKey: string;
-  apiUrl?: string; // defaults to https://api.appsprint.app
+  apiUrl?: string; // defaults to https://api.postback.sh
   endpointBaseUrl?: string; // alias for apiUrl
   enableAppleAdsAttribution?: boolean;
   isDebug?: boolean;
@@ -12,7 +12,7 @@ export interface AppSprintConfig {
   googleAdsConsent?: GoogleAdsConsent | null;
 }
 
-export type AppSprintOptions = Omit<AppSprintConfig, "apiKey">;
+export type PostbackOptions = Omit<PostbackConfig, "apiKey">;
 export type LogLevel = 0 | 1 | 2 | 3;
 
 export type EventType =
@@ -119,7 +119,7 @@ export interface AttributionResult {
 }
 
 export interface InstallResponse {
-  appsprintId: string;
+  postbackId: string;
   attribution: AttributionResult;
   attributionParams?: AttributionParams;
 }
@@ -172,7 +172,7 @@ export interface DeviceInfo {
   attStatus?: "not_determined" | "restricted" | "denied" | "authorized";
 }
 
-export interface NativeAppSprintModule {
+export interface NativePostbackModule {
   // Core SDK (delegates to precompiled binary)
   configure(config: Record<string, unknown>): Promise<boolean>;
   sendEvent(
@@ -188,7 +188,7 @@ export interface NativeAppSprintModule {
   setCustomerUserId(userId: string): Promise<void>;
   refreshAttribution(): Promise<AttributionResult | null>;
   enableAppleAdsAttribution(): Promise<boolean>;
-  getAppSprintId(): Promise<string | null>;
+  getPostbackId(): Promise<string | null>;
   getAttribution(): Promise<AttributionResult | null>;
   getAttributionParams(): Promise<AttributionParams>;
   isInitialized(): Promise<boolean>;

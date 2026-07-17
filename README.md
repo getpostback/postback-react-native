@@ -1,8 +1,8 @@
-# AppSprint for React Native
+# Postback for React Native
 
 Mobile attribution and event tracking for React Native, with native iOS and Android SDKs bundled inside. Works with bare React Native and Expo. The JS bridge is thin: it forwards calls to the same native engines as our standalone iOS and Android SDKs.
 
-NPM package: https://www.npmjs.com/package/appsprint-react-native
+NPM package: https://www.npmjs.com/package/postback-react-native
 
 ## Requirements
 
@@ -14,13 +14,13 @@ NPM package: https://www.npmjs.com/package/appsprint-react-native
 ## Install
 
 ```bash
-npm install appsprint-react-native
+npm install postback-react-native
 ```
 
 or
 
 ```bash
-yarn add appsprint-react-native
+yarn add postback-react-native
 ```
 
 ### iOS
@@ -43,7 +43,7 @@ If you use Expo prebuild, add the config plugin to `app.json` or `app.config.js`
 {
   "plugins": [
     [
-      "appsprint-react-native",
+      "postback-react-native",
       {
         "trackingDescription": "This identifier helps us deliver personalized ads."
       }
@@ -64,9 +64,9 @@ The plugin injects `NSUserTrackingUsageDescription` on iOS and the Android permi
 Call `configure` once at app startup. It returns a promise that resolves after local state is restored; install registration runs in the background:
 
 ```tsx
-import { AppSprint } from "appsprint-react-native";
+import { Postback } from "postback-react-native";
 
-await AppSprint.configure({
+await Postback.configure({
   apiKey: "YOUR_API_KEY",
 });
 ```
@@ -75,15 +75,15 @@ A typical app calls this from `App.tsx` (or `app/_layout.tsx` on Expo Router):
 
 ```tsx
 import { useEffect } from "react";
-import { AppSprint, NativeAppSprint } from "appsprint-react-native";
+import { Postback, NativePostback } from "postback-react-native";
 
 export default function App() {
   useEffect(() => {
     (async () => {
-      await AppSprint.configure({ apiKey: "YOUR_API_KEY" });
+      await Postback.configure({ apiKey: "YOUR_API_KEY" });
 
       // iOS only. Skipped at runtime on Android.
-      await NativeAppSprint.requestTrackingAuthorization();
+      await NativePostback.requestTrackingAuthorization();
     })();
   }, []);
 
@@ -95,8 +95,8 @@ export default function App() {
 
 | Option | Type | Default | What it does |
 |---|---|---|---|
-| `apiKey` | `string` | required | Your AppSprint app key. |
-| `apiUrl` | `string` | `https://api.appsprint.app` | Override for staging or self-hosted environments. |
+| `apiKey` | `string` | required | Your Postback app key. |
+| `apiUrl` | `string` | `https://api.postback.sh` | Override for staging or self-hosted environments. |
 | `endpointBaseUrl` | `string` | alias for `apiUrl` | Accepted for compatibility. |
 | `enableAppleAdsAttribution` | `boolean` | `true` | iOS only. Fetches Apple AdServices at install time. |
 | `customerUserId` | `string \| null` | `null` | Your internal user ID. Persists across launches and replays if the first send fails. |
@@ -105,24 +105,20 @@ export default function App() {
 | `isDebug` | `boolean` | `false` | Forces debug-level logging on the native side. |
 | `logLevel` | `0 \| 1 \| 2 \| 3` | `2` | `0 = debug`, `1 = info`, `2 = warn`, `3 = error`. |
 
-ASO integrations may continue using `AppSprintAppleAds.configure(...)`. This
-facade remains iOS-only, keeps Apple Ads attribution enabled, and now also
-registers organic installs, automatic sessions, and events for all iOS users.
-
 ## Track events
 
 ```tsx
-import { AppSprint } from "appsprint-react-native";
+import { Postback } from "postback-react-native";
 
-await AppSprint.sendEvent("login");
-await AppSprint.sendEvent("sign_up");
+await Postback.sendEvent("login");
+await Postback.sendEvent("sign_up");
 
-await AppSprint.sendEvent("purchase", null, {
+await Postback.sendEvent("purchase", null, {
   revenue: 9.99,
   currency: "USD",
 });
 
-await AppSprint.sendEvent("custom", "onboarding_step", {
+await Postback.sendEvent("custom", "onboarding_step", {
   screen: "welcome",
   step: 1,
 });
@@ -139,7 +135,7 @@ await AppSprint.sendEvent("custom", "onboarding_step", {
 Pass `revenue` (or `price` as an alias) plus `currency`. Currency must be a 3-letter ISO code; anything else is dropped on the native side before the request goes out.
 
 ```tsx
-await AppSprint.sendEvent("subscribe", null, {
+await Postback.sendEvent("subscribe", null, {
   revenue: 4.99,
   currency: "EUR",
   plan: "monthly",
@@ -149,7 +145,7 @@ await AppSprint.sendEvent("subscribe", null, {
 ### Custom events
 
 ```tsx
-await AppSprint.sendEvent("custom", "level_skip", { level: 12 });
+await Postback.sendEvent("custom", "level_skip", { level: 12 });
 ```
 
 Use the second argument (`name`) to label the event. Keep it stable so your dashboard groups it correctly.
@@ -159,22 +155,22 @@ Use the second argument (`name`) to label the event. Keep it stable so your dash
 Once an install registers, attribution is cached on the native side. You can read it any time:
 
 ```tsx
-const attribution = await AppSprint.getAttribution();
-const appsprintId = await AppSprint.getAppSprintId();
+const attribution = await Postback.getAttribution();
+const postbackId = await Postback.getPostbackId();
 ```
 
 `AttributionResult.source` is one of `apple_ads`, `tracking_link`, or `organic`.
 
 ### Link RevenueCat or Superwall
 
-For revenue webhooks, set only the `appsprintId` subscriber/user attribute. Do not forward the full `getAttributionParams()` map to RevenueCat; it contains attribution details such as `source` and `isAttributed` for diagnostics and custom integrations.
+For revenue webhooks, set only the `postbackId` subscriber/user attribute. Do not forward the full `getAttributionParams()` map to RevenueCat; it contains attribution details such as `source` and `isAttributed` for diagnostics and custom integrations.
 
 ```tsx
 import Purchases from "react-native-purchases";
 
-const appsprintId = await AppSprint.getAppSprintId();
-if (appsprintId) {
-  await Purchases.setAttributes({ appsprintId });
+const postbackId = await Postback.getPostbackId();
+if (postbackId) {
+  await Purchases.setAttributes({ postbackId });
 }
 ```
 
@@ -183,23 +179,23 @@ if (appsprintId) {
 If you need the latest server-side resolution (for example after granting ATT mid-session), call `refreshAttribution()`:
 
 ```tsx
-const updated = await AppSprint.refreshAttribution();
+const updated = await Postback.refreshAttribution();
 console.log("source =", updated?.source);
 ```
 
 ## App Tracking Transparency (iOS only)
 
 ```tsx
-import { NativeAppSprint } from "appsprint-react-native";
+import { NativePostback } from "postback-react-native";
 
-const authorized = await NativeAppSprint.requestTrackingAuthorization();
+const authorized = await NativePostback.requestTrackingAuthorization();
 ```
 
 The helper waits internally for the app to reach foreground-active before showing the system prompt. If you call it during initial mount, it will queue and run when the user gets to your first screen.
 
 For bare React Native apps, add `NSUserTrackingUsageDescription` to `ios/<App>/Info.plist`. Expo users get this through the config plugin's `trackingDescription` option.
 
-`NativeAppSprint.requestTrackingAuthorization()` resolves `true` on Android without prompting; ATT is iOS-only.
+`NativePostback.requestTrackingAuthorization()` resolves `true` on Android without prompting; ATT is iOS-only.
 
 ## Google Advertising ID (Android only)
 
@@ -223,7 +219,7 @@ The native Android SDK reads GAID during install registration, off the main thre
 
 ## Privacy
 
-The vendored iOS framework ships a `PrivacyInfo.xcprivacy` manifest declaring `UserDefaults` access plus `DeviceID`, `ProductInteraction`, `UserID`, `CoarseLocation`, and `OtherDataTypes` collection, all marked `Tracking: false`. The core AppSprint API domain is not declared as a tracking domain, so ATT denial does not block install or event delivery.
+The vendored iOS framework ships a `PrivacyInfo.xcprivacy` manifest declaring `UserDefaults` access plus `DeviceID`, `ProductInteraction`, `UserID`, `CoarseLocation`, and `OtherDataTypes` collection, all marked `Tracking: false`. The core Postback API domain is not declared as a tracking domain, so ATT denial does not block install or event delivery.
 
 For Android, include advertising ID collection, device IDs, approximate location/network-derived country, device or other identifiers, app activity, and (if you set `customerUserId`) user ID in your Play Console Data safety answers.
 
@@ -232,7 +228,7 @@ Don't pass raw PII through `params` or `customerUserId`. Both persist to native 
 ## Local development
 
 ```tsx
-await AppSprint.configure({
+await Postback.configure({
   apiKey: "YOUR_DEV_KEY",
   apiUrl: "http://localhost:3000",
   isDebug: true,
@@ -241,14 +237,14 @@ await AppSprint.configure({
 
 On Android emulator, use `http://10.0.2.2:3000` to reach the host machine's localhost.
 
-`isDebug: true` raises native log level to `debug`. iOS logs flow into Console.app; Android logs flow into `logcat` under the `AppSprint` tag.
+`isDebug: true` raises native log level to `debug`. iOS logs flow into Console.app; Android logs flow into `logcat` under the `Postback` tag.
 
 ## Public API reference
 
-### `AppSprint`
+### `Postback`
 
 ```tsx
-import { AppSprint } from "appsprint-react-native";
+import { Postback } from "postback-react-native";
 ```
 
 - `configure(config)` initializes the SDK.
@@ -258,7 +254,7 @@ import { AppSprint } from "appsprint-react-native";
 - `setCustomerUserId(userId)` updates the customer user ID.
 - `getAttribution()` returns the cached attribution.
 - `getAttributionParams()` returns a flat attribution/debug payload for custom integrations.
-- `getAppSprintId()` returns the SDK install identifier.
+- `getPostbackId()` returns the SDK install identifier.
 - `enableAppleAdsAttribution()` re-enables Apple Ads at runtime on iOS; returns `false` on Android.
 - `sendTestEvent()` posts a diagnostic event and resolves to `{ success, message }`.
 - `isInitialized()` reports whether `configure()` resolved.
@@ -266,10 +262,10 @@ import { AppSprint } from "appsprint-react-native";
 - `clearData()` wipes local state.
 - `destroy()` removes native lifecycle observers.
 
-### `NativeAppSprint`
+### `NativePostback`
 
 ```tsx
-import { NativeAppSprint } from "appsprint-react-native";
+import { NativePostback } from "postback-react-native";
 ```
 
 - `getDeviceInfo()` returns the attribution device signal payload.
@@ -278,7 +274,7 @@ import { NativeAppSprint } from "appsprint-react-native";
 
 ## Support
 
-Issues and feature requests on the [GitHub repo](https://github.com/getappsprint/appsprint-react-native). Direct support at support@appsprint.app.
+Issues and feature requests on the [GitHub repo](https://github.com/getpostback/postback-react-native). Direct support at support@postback.sh.
 
 ## License
 

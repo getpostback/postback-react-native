@@ -24,7 +24,7 @@ function ensureAndroidPermission(androidManifest, permissionName) {
   androidManifest.manifest["uses-permission"] = permissions;
 }
 
-const withAppSprint = (config, props) =>
+const withPostback = (config, props) =>
   withAndroidManifest(
     withInfoPlist(config, (expoConfig) => {
       expoConfig.modResults.NSUserTrackingUsageDescription =
@@ -46,5 +46,5 @@ const withAppSprint = (config, props) =>
     }
   );
 
-module.exports = withAppSprint;
-module.exports.default = withAppSprint;
+module.exports = withPostback;
+module.exports.default = withPostback;

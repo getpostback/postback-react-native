@@ -1,1 +1,1 @@
-{"version":3,"names":["_AppSprint","require","_AppSprintAppleAds","_NativeAppSprint"],"sourceRoot":"../../src","sources":["index.ts"],"mappings":";;;;;;;;;;;;;;;;;;;;;;;AAAA,IAAAA,UAAA,GAAAC,OAAA;AACA,IAAAC,kBAAA,GAAAD,OAAA;AACA,IAAAE,gBAAA,GAAAF,OAAA","ignoreList":[]}
+{"version":3,"names":["_Postback","require","_NativePostback"],"sourceRoot":"../../src","sources":["index.ts"],"mappings":";;;;;;;;;;;;;;;;;AAAA,IAAAA,SAAA,GAAAC,OAAA;AACA,IAAAC,eAAA,GAAAD,OAAA","ignoreList":[]}

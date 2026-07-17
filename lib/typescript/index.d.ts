@@ -1,6 +1,4 @@
-export { AppSprint } from "./AppSprint";
-export { AppSprintAppleAds } from "./AppSprintAppleAds";
-export { NativeAppSprint } from "./NativeAppSprint";
-export type { AppSprintAppleAdsConfig, } from "./AppSprintAppleAds";
-export type { AppSprintConfig, AppSprintOptions, EventType, EventParams, AttributionResult, InstallResponse, DeviceInfo, LogLevel, TestEventResult, NativeAppSprintModule, } from "./types";
+export { Postback } from "./Postback";
+export { NativePostback } from "./NativePostback";
+export type { PostbackConfig, PostbackOptions, EventType, EventParams, AttributionResult, InstallResponse, DeviceInfo, LogLevel, TestEventResult, NativePostbackModule, } from "./types";
 //# sourceMappingURL=index.d.ts.map

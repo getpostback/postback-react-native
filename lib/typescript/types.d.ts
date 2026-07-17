@@ -1,4 +1,4 @@
-export interface AppSprintConfig {
+export interface PostbackConfig {
     apiKey: string;
     apiUrl?: string;
     endpointBaseUrl?: string;
@@ -11,7 +11,7 @@ export interface AppSprintConfig {
     eventTrackingEnabled?: boolean;
     googleAdsConsent?: GoogleAdsConsent | null;
 }
-export type AppSprintOptions = Omit<AppSprintConfig, "apiKey">;
+export type PostbackOptions = Omit<PostbackConfig, "apiKey">;
 export type LogLevel = 0 | 1 | 2 | 3;
 export type EventType = "session_start" | "SESSION_START" | "login" | "LOGIN" | "sign_up" | "SIGN_UP" | "register" | "REGISTER" | "purchase" | "PURCHASE" | "subscribe" | "SUBSCRIBE" | "start_trial" | "START_TRIAL" | "add_payment_info" | "ADD_PAYMENT_INFO" | "add_to_cart" | "ADD_TO_CART" | "add_to_wishlist" | "ADD_TO_WISHLIST" | "initiate_checkout" | "INITIATE_CHECKOUT" | "view_content" | "VIEW_CONTENT" | "view_item" | "VIEW_ITEM" | "search" | "SEARCH" | "share" | "SHARE" | "tutorial_complete" | "TUTORIAL_COMPLETE" | "achieve_level" | "ACHIEVE_LEVEL" | "level_start" | "LEVEL_START" | "level_complete" | "LEVEL_COMPLETE" | "custom" | "CUSTOM";
 export type GoogleAdsConsentStatus = "GRANTED" | "DENIED" | "UNSPECIFIED" | "granted" | "denied" | "unspecified";
@@ -63,7 +63,7 @@ export interface AttributionResult {
     utmTerm?: string | null;
 }
 export interface InstallResponse {
-    appsprintId: string;
+    postbackId: string;
     attribution: AttributionResult;
     attributionParams?: AttributionParams;
 }
@@ -113,7 +113,7 @@ export interface DeviceInfo {
     adServicesToken?: string;
     attStatus?: "not_determined" | "restricted" | "denied" | "authorized";
 }
-export interface NativeAppSprintModule {
+export interface NativePostbackModule {
     configure(config: Record<string, unknown>): Promise<boolean>;
     sendEvent(eventType: string, name: string | null, revenue: number | null, currency: string | null, parameters: Record<string, unknown> | null): Promise<boolean>;
     sendTestEvent(): Promise<TestEventResult>;
@@ -122,7 +122,7 @@ export interface NativeAppSprintModule {
     setCustomerUserId(userId: string): Promise<void>;
     refreshAttribution(): Promise<AttributionResult | null>;
     enableAppleAdsAttribution(): Promise<boolean>;
-    getAppSprintId(): Promise<string | null>;
+    getPostbackId(): Promise<string | null>;
     getAttribution(): Promise<AttributionResult | null>;
     getAttributionParams(): Promise<AttributionParams>;
     isInitialized(): Promise<boolean>;

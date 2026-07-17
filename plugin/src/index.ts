@@ -36,7 +36,7 @@ function ensureAndroidPermission(
   androidManifest.manifest["uses-permission"] = permissions;
 }
 
-const withAppSprint: ConfigPlugin<{
+const withPostback: ConfigPlugin<{
   trackingDescription?: string;
   advertisingAttributionEndpoint?: string;
 } | void> = (config, props) => {
@@ -68,4 +68,4 @@ const withAppSprint: ConfigPlugin<{
   return config;
 };
 
-export default withAppSprint;
+export default withPostback;

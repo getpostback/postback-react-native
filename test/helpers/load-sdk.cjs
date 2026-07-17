@@ -40,9 +40,9 @@ function createSdkTestContext(options = {}) {
       calls.push({ method: "enableAppleAdsAttribution", args: [] });
       return resolvedValues.enableAppleAdsAttribution ?? true;
     },
-    async getAppSprintId() {
-      calls.push({ method: "getAppSprintId", args: [] });
-      return resolvedValues.getAppSprintId ?? null;
+    async getPostbackId() {
+      calls.push({ method: "getPostbackId", args: [] });
+      return resolvedValues.getPostbackId ?? null;
     },
     async getAttribution() {
       calls.push({ method: "getAttribution", args: [] });
@@ -83,7 +83,7 @@ function createSdkTestContext(options = {}) {
 
   const reactNativeMock = {
     Platform: { OS: options.platform ?? "ios" },
-    NativeModules: { AppSprintModule: nativeModule },
+    NativeModules: { PostbackModule: nativeModule },
   };
 
   const originalLoad = Module._load;

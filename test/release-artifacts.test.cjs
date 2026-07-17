@@ -10,11 +10,11 @@ const packageJson = require(path.join(projectRoot, "package.json"));
 
 test("required binary artifacts are present", () => {
   const requiredPaths = [
-    "android/libs/appsprint-sdk.aar",
-    "ios/AppSprintSDK.xcframework/ios-arm64/AppSprintSDK.framework/AppSprintSDK",
-    "ios/AppSprintSDK.xcframework/ios-arm64/dSYMs/AppSprintSDK.framework.dSYM/Contents/Resources/DWARF/AppSprintSDK",
-    "ios/AppSprintSDK.xcframework/ios-arm64_x86_64-simulator/AppSprintSDK.framework/AppSprintSDK",
-    "ios/AppSprintSDK.xcframework/ios-arm64_x86_64-simulator/dSYMs/AppSprintSDK.framework.dSYM/Contents/Resources/DWARF/AppSprintSDK",
+    "android/libs/postback-sdk.aar",
+    "ios/PostbackSDK.xcframework/ios-arm64/PostbackSDK.framework/PostbackSDK",
+    "ios/PostbackSDK.xcframework/ios-arm64/dSYMs/PostbackSDK.framework.dSYM/Contents/Resources/DWARF/PostbackSDK",
+    "ios/PostbackSDK.xcframework/ios-arm64_x86_64-simulator/PostbackSDK.framework/PostbackSDK",
+    "ios/PostbackSDK.xcframework/ios-arm64_x86_64-simulator/dSYMs/PostbackSDK.framework.dSYM/Contents/Resources/DWARF/PostbackSDK",
     "app.plugin.js",
     "plugin/build/index.js",
   ];
@@ -40,7 +40,7 @@ test("package metadata reflects the binary-backed distribution contract", () => 
 
 test("podspec resolves npm repository metadata to a CocoaPods git URL", () => {
   const podspec = fs.readFileSync(
-    path.join(projectRoot, "appsprint-react-native.podspec"),
+    path.join(projectRoot, "postback-react-native.podspec"),
     "utf8"
   );
 
@@ -77,6 +77,8 @@ test("android permissions are packaged for consumers", () => {
 test("android wrapper declares local AAR runtime dependencies", () => {
   const gradle = fs.readFileSync(path.join(projectRoot, "android/build.gradle"), "utf8");
 
+  assert.match(gradle, /rootProject\.allprojects/);
+  assert.match(gradle, /implementation\(name: 'postback-sdk', ext: 'aar'\)/);
   assert.match(gradle, /lifecycle-process:2\.10\.0/);
   assert.match(gradle, /play-services-ads-identifier:18\.3\.0/);
   assert.match(gradle, /installreferrer:installreferrer:2\.2/);
