@@ -75,25 +75,51 @@ class PostbackBridge: NSObject {
                        parameters: NSDictionary?,
                        resolve: @escaping RCTPromiseResolveBlock,
                        rejecter reject: @escaping RCTPromiseRejectBlock) {
-    Task { @MainActor in
-      let type = PostbackEventType(rawValue: eventType) ?? .custom
+    let type = PostbackEventType(rawValue: eventType) ?? .custom
+    let normalizedName = Self.normalizedEventName(name)
+    guard type != .custom || normalizedName != nil else {
+      resolve(false)
+      return
+    }
 
+    Task { @MainActor in
       var params: [String: Any]? = nil
       if let parameters = parameters as? [String: Any] {
         params = parameters
       }
+      let normalizedCurrency = Self.normalizedCurrency(currency ?? params?["currency"] as? String)
+      params?.removeValue(forKey: "currency")
       if let rev = revenue?.doubleValue {
         if params == nil { params = [:] }
         params?["revenue"] = rev
       }
-      if let cur = currency {
+      if let cur = normalizedCurrency {
         if params == nil { params = [:] }
         params?["currency"] = cur
       }
 
-      await Postback.shared.sendEvent(type, name: name, params: params)
+      await Postback.shared.sendEvent(type, name: normalizedName, params: params)
       resolve(true)
     }
+  }
+
+  private static func normalizedEventName(_ name: String?) -> String? {
+    guard let normalized = name?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !normalized.isEmpty,
+          normalized.utf16.count <= 255,
+          !normalized.contains("\u{0}") else {
+      return nil
+    }
+    return normalized
+  }
+
+  private static func normalizedCurrency(_ currency: String?) -> String? {
+    guard let normalized = currency?.trimmingCharacters(in: .whitespacesAndNewlines),
+          normalized.utf8.count == 3,
+          normalized.utf8.allSatisfy({ (65...90).contains($0) || (97...122).contains($0) }) else {
+      return nil
+    }
+    return normalized.uppercased()
   }
 
   @objc func sendTestEvent(_ resolve: @escaping RCTPromiseResolveBlock,

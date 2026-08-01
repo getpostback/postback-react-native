@@ -49,6 +49,39 @@ function revenueValue(params?: EventParams): number | null {
   return numericValue(params?.revenue) ?? numericValue(params?.price);
 }
 
+function normalizeEventName(name?: string | null): string | null {
+  if (typeof name !== "string") return null;
+  const normalized = name.trim();
+  return normalized.length > 0 &&
+    normalized.length <= 255 &&
+    !normalized.includes("\0")
+    ? normalized
+    : null;
+}
+
+function normalizeCurrency(currency?: string): string | null {
+  if (typeof currency !== "string") return null;
+  const normalized = currency.trim();
+  return /^[A-Za-z]{3}$/.test(normalized)
+    ? normalized.toUpperCase()
+    : null;
+}
+
+function normalizeEventParams(params?: EventParams): EventParams | null {
+  if (!params) return null;
+
+  const normalizedParams = { ...params };
+  if (Object.prototype.hasOwnProperty.call(normalizedParams, "currency")) {
+    const currency = normalizeCurrency(normalizedParams.currency);
+    if (currency === null) {
+      delete normalizedParams.currency;
+    } else {
+      normalizedParams.currency = currency;
+    }
+  }
+  return normalizedParams;
+}
+
 function normalizeConfig(
   configOrApiKey: PostbackConfig | string,
   options: PostbackOptions = {}
@@ -83,17 +116,24 @@ class PostbackSDK {
     const nativeEventType = STANDARD_EVENT_TYPES.has(normalizedEventType)
       ? normalizedEventType
       : "custom";
-    const nativeName =
+    const nativeName = normalizeEventName(
       nativeEventType === "custom" && normalizedEventType !== "custom"
         ? name ?? normalizedEventType
-        : name ?? null;
+        : name
+    );
+
+    if (nativeEventType === "custom" && nativeName === null) {
+      return false;
+    }
+
+    const nativeParams = normalizeEventParams(params);
 
     return NativePostback.sendEvent(
       nativeEventType,
       nativeName,
       revenueValue(params),
-      params?.currency ?? null,
-      params ?? null
+      normalizeCurrency(params?.currency),
+      nativeParams
     );
   }
 

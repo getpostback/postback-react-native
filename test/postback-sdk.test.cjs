@@ -233,6 +233,105 @@ test("sendEvent preserves unknown strings as custom event names", async () => {
   }
 });
 
+test("sendEvent ignores custom events without a valid name", async () => {
+  const ctx = createSdkTestContext();
+
+  try {
+    assert.equal(await ctx.sdk.Postback.sendEvent("custom"), false);
+    assert.equal(await ctx.sdk.Postback.sendEvent("CUSTOM", "   "), false);
+    assert.equal(
+      await ctx.sdk.Postback.sendEvent("custom", "n".repeat(256)),
+      false
+    );
+    assert.equal(
+      await ctx.sdk.Postback.sendEvent("custom", "😀".repeat(128)),
+      false
+    );
+    assert.equal(
+      await ctx.sdk.Postback.sendEvent("custom", "checkout\0complete"),
+      false
+    );
+    assert.equal(
+      ctx.calls.some((call) => call.method === "sendEvent"),
+      false
+    );
+  } finally {
+    ctx.restore();
+  }
+});
+
+test("sendEvent trims valid custom names and accepts the 255 UTF-16 unit boundary", async () => {
+  const ctx = createSdkTestContext();
+
+  try {
+    const boundaryName = `${"😀".repeat(127)}x`;
+    assert.equal(boundaryName.length, 255);
+    assert.equal(
+      await ctx.sdk.Postback.sendEvent("custom", `  ${boundaryName}  `),
+      true
+    );
+
+    const sendCall = ctx.calls.find((call) => call.method === "sendEvent");
+    assert.ok(sendCall);
+    assert.equal(sendCall.args[0], "custom");
+    assert.equal(sendCall.args[1], boundaryName);
+  } finally {
+    ctx.restore();
+  }
+});
+
+test("sendEvent omits an invalid optional name from built-in events", async () => {
+  const ctx = createSdkTestContext();
+
+  try {
+    assert.equal(
+      await ctx.sdk.Postback.sendEvent("purchase", "n".repeat(256)),
+      true
+    );
+
+    const sendCall = ctx.calls.find((call) => call.method === "sendEvent");
+    assert.ok(sendCall);
+    assert.equal(sendCall.args[0], "purchase");
+    assert.equal(sendCall.args[1], null);
+
+    await ctx.sdk.Postback.sendEvent("login", "opened\0home");
+    const loginCall = ctx.calls.find(
+      (call) => call.method === "sendEvent" && call.args[0] === "login"
+    );
+    assert.ok(loginCall);
+    assert.equal(loginCall.args[1], null);
+  } finally {
+    ctx.restore();
+  }
+});
+
+test("sendEvent only forwards normalized three-letter ASCII currency codes", async () => {
+  const ctx = createSdkTestContext();
+
+  try {
+    await ctx.sdk.Postback.sendEvent("purchase", null, {
+      revenue: 2.5,
+      currency: " usd ",
+    });
+    await ctx.sdk.Postback.sendEvent("purchase", null, {
+      revenue: 3.5,
+      currency: "éur",
+    });
+
+    const sendCalls = ctx.calls.filter((call) => call.method === "sendEvent");
+    assert.equal(sendCalls.length, 2);
+    assert.equal(sendCalls[0].args[3], "USD");
+    assert.deepEqual(sendCalls[0].args[4], {
+      revenue: 2.5,
+      currency: "USD",
+    });
+    assert.equal(sendCalls[1].args[3], null);
+    assert.deepEqual(sendCalls[1].args[4], { revenue: 3.5 });
+  } finally {
+    ctx.restore();
+  }
+});
+
 test("sendEvent handles null name and params", async () => {
   const ctx = createSdkTestContext();
 

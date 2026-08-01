@@ -90,15 +90,38 @@ class PostbackBridgeModule(reactContext: ReactApplicationContext) : ReactContext
 
     @ReactMethod
     fun sendEvent(eventType: String, name: String?, revenue: Double?, currency: String?, parameters: ReadableMap?, promise: Promise) {
+        val type = PostbackEventType.entries.find { it.wireValue == eventType } ?: PostbackEventType.CUSTOM
+        val normalizedName = normalizedEventName(name)
+        if (type == PostbackEventType.CUSTOM && normalizedName == null) {
+            promise.resolve(false)
+            return
+        }
+
         runAsync("SEND_EVENT_ERROR", promise) {
-            val type = PostbackEventType.entries.find { it.wireValue == eventType } ?: PostbackEventType.CUSTOM
             val params = mutableMapOf<String, Any?>()
             parameters?.toHashMap()?.forEach { (key, value) -> params[key] = value }
+            val normalizedCurrency = normalizedCurrency(currency ?: params["currency"] as? String)
+            params.remove("currency")
             if (revenue != null) params["revenue"] = revenue
-            if (currency != null) params["currency"] = currency
-            sdk().sendEvent(type, name, if (params.isNotEmpty()) params else null)
+            if (normalizedCurrency != null) params["currency"] = normalizedCurrency
+            sdk().sendEvent(type, normalizedName, if (params.isNotEmpty()) params else null)
             promise.resolve(true)
         }
+    }
+
+    private fun normalizedEventName(name: String?): String? {
+        val normalized = name?.trim()
+        return normalized?.takeIf {
+            it.isNotEmpty() && it.length <= MAX_EVENT_NAME_LENGTH && '\u0000' !in it
+        }
+    }
+
+    private fun normalizedCurrency(currency: String?): String? {
+        val normalized = currency?.trim() ?: return null
+        if (normalized.length != 3 || normalized.any { it !in 'A'..'Z' && it !in 'a'..'z' }) {
+            return null
+        }
+        return normalized.uppercase(java.util.Locale.US)
     }
 
     @ReactMethod
@@ -313,5 +336,9 @@ class PostbackBridgeModule(reactContext: ReactApplicationContext) : ReactContext
     override fun invalidate() {
         bridgeExecutor.shutdown()
         super.invalidate()
+    }
+
+    private companion object {
+        const val MAX_EVENT_NAME_LENGTH = 255
     }
 }

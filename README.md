@@ -124,7 +124,7 @@ await Postback.sendEvent("custom", "onboarding_step", {
 });
 ```
 
-`sendEvent` resolves once the native side has queued the event locally. The actual HTTP send happens on the next flush trigger (foreground, background, or another `sendEvent`).
+`sendEvent` resolves to `true` once the native side has queued the event locally. It resolves to `false` when a custom event is ignored because its name is missing or invalid. The actual HTTP send happens on the next flush trigger (foreground, background, or another `sendEvent`).
 
 ### Built-in event types
 
@@ -132,7 +132,7 @@ await Postback.sendEvent("custom", "onboarding_step", {
 
 ### Revenue events
 
-Pass `revenue` (or `price` as an alias) plus `currency`. Currency must be a 3-letter ISO code; anything else is dropped on the native side before the request goes out.
+Pass `revenue` (or `price` as an alias) plus `currency`. Currency is trimmed, must contain exactly three ASCII letters, and is normalized to uppercase. An invalid currency is omitted while the event still sends.
 
 ```tsx
 await Postback.sendEvent("subscribe", null, {
@@ -148,7 +148,7 @@ await Postback.sendEvent("subscribe", null, {
 await Postback.sendEvent("custom", "level_skip", { level: 12 });
 ```
 
-Use the second argument (`name`) to label the event. Keep it stable so your dashboard groups it correctly.
+Custom events require a `name` containing 1–255 UTF-16 code units after trimming, with no NUL (`U+0000`) characters. A custom event with a missing or invalid name is ignored. Keep the name stable so your dashboard groups it correctly.
 
 ## Read attribution
 
