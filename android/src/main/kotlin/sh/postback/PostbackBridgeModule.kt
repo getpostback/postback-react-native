@@ -314,23 +314,8 @@ class PostbackBridgeModule(reactContext: ReactApplicationContext) : ReactContext
     }
 
     @ReactMethod
-    fun getWebViewUserAgent(promise: Promise) {
-        runAsync("WEBVIEW_USER_AGENT_ERROR", promise) {
-            val userAgent = PostbackNative(reactApplicationContext)
-                .getDeviceInfo(includeAdvertisingId = false)
-                .sdkWebViewUserAgent
-            promise.resolve(userAgent)
-        }
-    }
-
-    @ReactMethod
     fun getAdServicesToken(promise: Promise) {
         promise.resolve(null) // iOS only
-    }
-
-    @ReactMethod
-    fun requestTrackingAuthorization(promise: Promise) {
-        promise.resolve(PostbackNative(reactApplicationContext).requestTrackingAuthorization())
     }
 
     override fun invalidate() {

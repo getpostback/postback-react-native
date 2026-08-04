@@ -42,21 +42,15 @@ If you use Expo prebuild, add the config plugin to `app.json` or `app.config.js`
 ```json
 {
   "plugins": [
-    [
-      "postback-react-native",
-      {
-        "trackingDescription": "This identifier helps us deliver personalized ads."
-      }
-    ]
+    "postback-react-native"
   ]
 }
 ```
 
-The plugin injects `NSUserTrackingUsageDescription` on iOS and the Android permissions during prebuild.
+The plugin adds the Android permissions during prebuild. It does not add `NSUserTrackingUsageDescription` or any ATT configuration.
 
 | Plugin option | Type | Description | Default |
 |---|---|---|---|
-| `trackingDescription` | `string` | Text for the ATT permission prompt. | `"This identifier will be used to deliver personalized ads to you."` |
 | `advertisingAttributionEndpoint` | `string` | Sets `NSAdvertisingAttributionReportEndpoint`. | none |
 
 ## Configure
@@ -75,15 +69,12 @@ A typical app calls this from `App.tsx` (or `app/_layout.tsx` on Expo Router):
 
 ```tsx
 import { useEffect } from "react";
-import { Postback, NativePostback } from "postback-react-native";
+import { Postback } from "postback-react-native";
 
 export default function App() {
   useEffect(() => {
     (async () => {
       await Postback.configure({ apiKey: "YOUR_API_KEY" });
-
-      // iOS only. Skipped at runtime on Android.
-      await NativePostback.requestTrackingAuthorization();
     })();
   }, []);
 
@@ -150,6 +141,8 @@ await Postback.sendEvent("custom", "level_skip", { level: 12 });
 
 Custom events require a `name` containing 1–255 UTF-16 code units after trimming, with no NUL (`U+0000`) characters. A custom event with a missing or invalid name is ignored. Keep the name stable so your dashboard groups it correctly.
 
+Names on built-in events are optional; an invalid optional name is omitted while the event still sends. Events restored from an older native queue are revalidated on flush: invalid legacy custom events are dropped, while invalid legacy names on built-in events are omitted. Invalid legacy currency fields are also omitted on Android; current cross-platform calls normalize currency before queuing on either platform.
+
 ## Read attribution
 
 Once an install registers, attribution is cached on the native side. You can read it any time:
@@ -176,26 +169,16 @@ if (postbackId) {
 
 ### Manual refresh
 
-If you need the latest server-side resolution (for example after granting ATT mid-session), call `refreshAttribution()`:
+If you need the latest server-side resolution (for example after a late Apple Ads token is processed), call `refreshAttribution()`:
 
 ```tsx
 const updated = await Postback.refreshAttribution();
 console.log("source =", updated?.source);
 ```
 
-## App Tracking Transparency (iOS only)
+## Privacy on iOS
 
-```tsx
-import { NativePostback } from "postback-react-native";
-
-const authorized = await NativePostback.requestTrackingAuthorization();
-```
-
-The helper waits internally for the app to reach foreground-active before showing the system prompt. If you call it during initial mount, it will queue and run when the user gets to your first screen.
-
-For bare React Native apps, add `NSUserTrackingUsageDescription` to `ios/<App>/Info.plist`. Expo users get this through the config plugin's `trackingDescription` option.
-
-`NativePostback.requestTrackingAuthorization()` resolves `true` on Android without prompting; ATT is iOS-only.
+The iOS SDK does not import AppTrackingTransparency or AdSupport, request ATT permission, read IDFA or IDFV, or collect device/browser characteristics for fingerprint matching. Do not add `NSUserTrackingUsageDescription` solely for Postback. Apple Ads attribution uses Apple's privacy-preserving AdServices token.
 
 ## Google Advertising ID (Android only)
 
@@ -215,7 +198,7 @@ The native Android SDK reads GAID during install registration, off the main thre
 - Events queue locally on native storage and survive app restarts.
 - iOS fails fast on connectivity errors and retries through the SDK queue, so blocked or offline requests surface real errors instead of sitting in an OS connectivity wait.
 - A rejected API key (`401` or `403`) disables the SDK on the native side. Future events drop until `clearData()` is called.
-- Late identity updates (`setCustomerUserId`, iOS Apple Ads opt-in) retry automatically on the next `configure()` or foreground.
+- Late updates (`setCustomerUserId`, iOS Apple Ads tokens) retry automatically on the next `configure()` or foreground.
 
 ## Privacy
 
@@ -268,9 +251,8 @@ import { Postback } from "postback-react-native";
 import { NativePostback } from "postback-react-native";
 ```
 
-- `getDeviceInfo()` returns the attribution device signal payload.
+- `getDeviceInfo()` returns SDK/platform, OS, and app version metadata on iOS. Android also returns its platform-specific attribution metadata.
 - `getAdServicesToken()` returns Apple's AdServices token on iOS; `null` on Android.
-- `requestTrackingAuthorization()` shows the ATT prompt on iOS; resolves `true` on Android.
 
 ## Support
 

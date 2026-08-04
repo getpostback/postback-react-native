@@ -1,7 +1,6 @@
 import type { ConfigPlugin } from "@expo/config-plugins";
 
 export interface PostbackExpoPluginProps {
-  trackingDescription?: string;
   advertisingAttributionEndpoint?: string;
 }
 

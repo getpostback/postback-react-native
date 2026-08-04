@@ -106,7 +106,7 @@ export interface AppleAdsAttribution {
 export interface AttributionResult {
   isAttributed?: boolean;
   source?: "tracking_link" | "apple_ads" | "organic" | "fingerprint" | string;
-  matchType?: "idfa" | "idfv" | "ip_user_agent" | "apple_ads" | "organic" | string;
+  matchType?: "click_id" | "ip_user_agent" | "apple_ads" | "organic" | string;
   link?: AttributionLink | null;
   appleAds?: AppleAdsAttribution | null;
   confidence?: number;
@@ -166,10 +166,6 @@ export interface DeviceInfo {
   osVersion?: string;
   appVersion?: string;
   gaid?: string;
-  idfv?: string;
-  idfa?: string;
-  adServicesToken?: string;
-  attStatus?: "not_determined" | "restricted" | "denied" | "authorized";
 }
 
 export interface NativePostbackModule {
@@ -197,7 +193,5 @@ export interface NativePostbackModule {
 
   // Utility
   getDeviceInfo(): Promise<DeviceInfo>;
-  getWebViewUserAgent?(): Promise<string | null>;
   getAdServicesToken(): Promise<string | null>;
-  requestTrackingAuthorization(): Promise<boolean>;
 }

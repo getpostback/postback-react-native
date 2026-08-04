@@ -65,19 +65,11 @@ function createSdkTestContext(options = {}) {
     },
     async getDeviceInfo() {
       calls.push({ method: "getDeviceInfo", args: [] });
-      return resolvedValues.getDeviceInfo ?? { deviceModel: "iPhone15,2", locale: "en-US" };
-    },
-    async getWebViewUserAgent() {
-      calls.push({ method: "getWebViewUserAgent", args: [] });
-      return resolvedValues.getWebViewUserAgent ?? null;
+      return resolvedValues.getDeviceInfo ?? { sdkPlatform: "ios", osVersion: "18.7" };
     },
     async getAdServicesToken() {
       calls.push({ method: "getAdServicesToken", args: [] });
       return resolvedValues.getAdServicesToken ?? null;
-    },
-    async requestTrackingAuthorization() {
-      calls.push({ method: "requestTrackingAuthorization", args: [] });
-      return resolvedValues.requestTrackingAuthorization ?? true;
     },
   };
 

@@ -37,25 +37,18 @@ function ensureAndroidPermission(
 }
 
 const withPostback: ConfigPlugin<{
-  trackingDescription?: string;
   advertisingAttributionEndpoint?: string;
 } | void> = (config, props) => {
-  const description =
-    props?.trackingDescription ??
-    "This identifier will be used to deliver personalized ads to you.";
+  if (props?.advertisingAttributionEndpoint) {
+    config = withInfoPlist(config, (config) => {
+      if (props?.advertisingAttributionEndpoint) {
+        config.modResults.NSAdvertisingAttributionReportEndpoint =
+          props.advertisingAttributionEndpoint;
+      }
 
-  config = withInfoPlist(config, (config) => {
-    // Add ATT usage description
-    config.modResults.NSUserTrackingUsageDescription = description;
-
-    // Add advertising attribution report endpoint
-    if (props?.advertisingAttributionEndpoint) {
-      config.modResults.NSAdvertisingAttributionReportEndpoint =
-        props.advertisingAttributionEndpoint;
-    }
-
-    return config;
-  });
+      return config;
+    });
+  }
 
   config = withAndroidManifest(config, (config) => {
     for (const permission of ANDROID_PERMISSIONS) {

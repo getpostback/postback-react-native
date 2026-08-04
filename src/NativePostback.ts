@@ -43,14 +43,8 @@ const unsupportedPlatformModule: NativePostbackModule = {
   async getDeviceInfo() {
     return {};
   },
-  async getWebViewUserAgent() {
-    return null;
-  },
   async getAdServicesToken() {
     return null;
-  },
-  async requestTrackingAuthorization() {
-    return false;
   },
 };
 

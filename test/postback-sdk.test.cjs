@@ -25,27 +25,11 @@ test("exports the documented public API", async () => {
     assert.equal(typeof ctx.sdk.Postback.isSdkDisabled, "function");
     assert.equal(typeof ctx.sdk.Postback.destroy, "function");
     assert.equal(typeof ctx.sdk.NativePostback.getDeviceInfo, "function");
-    assert.equal(typeof ctx.sdk.NativePostback.getWebViewUserAgent, "function");
-    assert.equal(typeof ctx.sdk.NativePostback.requestTrackingAuthorization, "function");
+    assert.equal("getWebViewUserAgent" in ctx.sdk.NativePostback, false);
+    assert.equal("requestTrackingAuthorization" in ctx.sdk.NativePostback, false);
     assert.equal("storageSet" in ctx.sdk.NativePostback, false);
     assert.equal("storageGet" in ctx.sdk.NativePostback, false);
     assert.equal("storageRemove" in ctx.sdk.NativePostback, false);
-  } finally {
-    ctx.restore();
-  }
-});
-
-test("native WebView user-agent helper is available for diagnostics", async () => {
-  const userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148";
-  const ctx = createSdkTestContext({
-    resolvedValues: { getWebViewUserAgent: userAgent },
-  });
-
-  try {
-    const result = await ctx.sdk.NativePostback.getWebViewUserAgent();
-    const call = ctx.calls.find((c) => c.method === "getWebViewUserAgent");
-    assert.ok(call, "getWebViewUserAgent was called on native module");
-    assert.equal(result, userAgent);
   } finally {
     ctx.restore();
   }
@@ -437,13 +421,12 @@ test("sendTestEvent delegates to native module", async () => {
   }
 });
 
-test("getDeviceInfo returns enriched native connection fields", async () => {
+test("getDeviceInfo returns privacy-safe iOS metadata", async () => {
   const deviceInfo = {
-    deviceModel: "iPhone15,2",
-    connectionType: "cellular",
-    networkType: "5g",
-    colorScheme: "dark",
+    sdkPlatform: "ios",
     sdkVersion: "1.0.0",
+    osVersion: "18.7",
+    appVersion: "1.0",
   };
   const ctx = createSdkTestContext({
     resolvedValues: { getDeviceInfo: deviceInfo },
@@ -528,7 +511,6 @@ test("unsupported platforms return the documented safe fallback behavior", async
     assert.equal(await ctx.sdk.Postback.isInitialized(), false);
     assert.equal(await ctx.sdk.Postback.isSdkDisabled(), false);
     assert.equal(await ctx.sdk.NativePostback.getAdServicesToken(), null);
-    assert.equal(await ctx.sdk.NativePostback.requestTrackingAuthorization(), false);
     assert.deepEqual(await ctx.sdk.NativePostback.getDeviceInfo(), {});
     assert.deepEqual(await ctx.sdk.Postback.getAttributionParams(), {});
     await ctx.sdk.Postback.destroy();

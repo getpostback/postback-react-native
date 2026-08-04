@@ -2,9 +2,6 @@
 
 const { withAndroidManifest, withInfoPlist } = require("@expo/config-plugins");
 
-const DEFAULT_TRACKING_DESCRIPTION =
-  "This identifier will be used to deliver personalized ads to you.";
-
 const ANDROID_PERMISSIONS = [
   "android.permission.INTERNET",
   "android.permission.ACCESS_NETWORK_STATE",
@@ -24,27 +21,26 @@ function ensureAndroidPermission(androidManifest, permissionName) {
   androidManifest.manifest["uses-permission"] = permissions;
 }
 
-const withPostback = (config, props) =>
-  withAndroidManifest(
-    withInfoPlist(config, (expoConfig) => {
-      expoConfig.modResults.NSUserTrackingUsageDescription =
-        props?.trackingDescription ?? DEFAULT_TRACKING_DESCRIPTION;
-
+const withPostback = (config, props) => {
+  if (props?.advertisingAttributionEndpoint) {
+    config = withInfoPlist(config, (expoConfig) => {
       if (props?.advertisingAttributionEndpoint) {
         expoConfig.modResults.NSAdvertisingAttributionReportEndpoint =
           props.advertisingAttributionEndpoint;
       }
 
       return expoConfig;
-    }),
-    (expoConfig) => {
-      for (const permission of ANDROID_PERMISSIONS) {
-        ensureAndroidPermission(expoConfig.modResults, permission);
-      }
+    });
+  }
 
-      return expoConfig;
+  return withAndroidManifest(config, (expoConfig) => {
+    for (const permission of ANDROID_PERMISSIONS) {
+      ensureAndroidPermission(expoConfig.modResults, permission);
     }
-  );
+
+    return expoConfig;
+  });
+};
 
 module.exports = withPostback;
 module.exports.default = withPostback;

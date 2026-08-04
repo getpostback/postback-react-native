@@ -72,6 +72,19 @@ test("android permissions are packaged for consumers", () => {
   assert.match(plugin, /com\.google\.android\.gms\.permission\.AD_ID/);
 
   assert.match(plugin, /withAndroidManifest/);
+  assert.doesNotMatch(plugin, /NSUserTrackingUsageDescription/);
+  assert.doesNotMatch(plugin, /trackingDescription/);
+});
+
+test("iOS package does not link ATT or advertising identifier frameworks", () => {
+  const podspec = fs.readFileSync(
+    path.join(projectRoot, "postback-react-native.podspec"),
+    "utf8"
+  );
+
+  assert.doesNotMatch(podspec, /AppTrackingTransparency/);
+  assert.doesNotMatch(podspec, /AdSupport/);
+  assert.match(podspec, /s\.weak_frameworks = "AdServices"/);
 });
 
 test("android wrapper declares local AAR runtime dependencies", () => {
