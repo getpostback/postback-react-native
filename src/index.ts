@@ -1,5 +1,4 @@
 export { Postback } from "./Postback";
-export { NativePostback } from "./NativePostback";
 export type {
   PostbackConfig,
   PostbackOptions,
@@ -7,9 +6,6 @@ export type {
   EventParams,
   AttributionResult,
   InstallResponse,
-  InstallType,
-  DeviceInfo,
   LogLevel,
   TestEventResult,
-  NativePostbackModule,
 } from "./types";

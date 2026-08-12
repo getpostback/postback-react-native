@@ -63,18 +63,6 @@ function createSdkTestContext(options = {}) {
     async destroy() {
       calls.push({ method: "destroy", args: [] });
     },
-    async getDeviceInfo() {
-      calls.push({ method: "getDeviceInfo", args: [] });
-      return resolvedValues.getDeviceInfo ?? { sdkPlatform: "ios", osVersion: "18.7" };
-    },
-    async getWebViewUserAgent() {
-      calls.push({ method: "getWebViewUserAgent", args: [] });
-      return resolvedValues.getWebViewUserAgent ?? null;
-    },
-    async getAdServicesToken() {
-      calls.push({ method: "getAdServicesToken", args: [] });
-      return resolvedValues.getAdServicesToken ?? null;
-    },
   };
 
   const reactNativeMock = {

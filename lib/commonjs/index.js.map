@@ -1,1 +1,1 @@
-{"version":3,"names":["_Postback","require","_NativePostback"],"sourceRoot":"../../src","sources":["index.ts"],"mappings":";;;;;;;;;;;;;;;;;AAAA,IAAAA,SAAA,GAAAC,OAAA;AACA,IAAAC,eAAA,GAAAD,OAAA","ignoreList":[]}
+{"version":3,"names":["_Postback","require"],"sourceRoot":"../../src","sources":["index.ts"],"mappings":";;;;;;;;;;;AAAA,IAAAA,SAAA,GAAAC,OAAA","ignoreList":[]}

@@ -38,7 +38,7 @@ test("package metadata reflects the binary-backed distribution contract", () => 
   assert.deepEqual(packageJson.expo?.plugins, ["./app.plugin.js"]);
 });
 
-test("generated TypeScript declarations export install lifecycle types", () => {
+test("generated TypeScript declarations keep native diagnostics internal", () => {
   const indexDeclarations = fs.readFileSync(
     path.join(projectRoot, "lib/typescript/index.d.ts"),
     "utf8"
@@ -48,17 +48,8 @@ test("generated TypeScript declarations export install lifecycle types", () => {
     "utf8"
   );
 
-  assert.match(indexDeclarations, /InstallType/);
-  for (const value of [
-    "fresh_install",
-    "reinstall",
-    "app_update",
-    "sdk_added_on_update",
-    "restore",
-    "unknown",
-  ]) {
-    assert.match(typeDeclarations, new RegExp(`"${value}"`));
-  }
+  assert.doesNotMatch(indexDeclarations, /NativePostback|InstallType|DeviceInfo/);
+  assert.doesNotMatch(typeDeclarations, /getDeviceInfo|getWebViewUserAgent|getAdServicesToken/);
 });
 
 test("podspec resolves npm repository metadata to a CocoaPods git URL", () => {
@@ -99,7 +90,7 @@ test("android permissions are packaged for consumers", () => {
   assert.doesNotMatch(plugin, /trackingDescription/);
 });
 
-test("iOS package links only the production-safe native dependencies", () => {
+test("iOS package links full attribution dependencies without an ATT prompt API", () => {
   const podspec = fs.readFileSync(
     path.join(projectRoot, "postback-react-native.podspec"),
     "utf8"
@@ -111,30 +102,25 @@ test("iOS package links only the production-safe native dependencies", () => {
     )
   );
 
-  assert.doesNotMatch(podspec, /AppTrackingTransparency/);
-  assert.doesNotMatch(podspec, /"AdSupport"/);
-  assert.doesNotMatch(podspec, /"CoreTelephony"/);
-  assert.doesNotMatch(podspec, /"Metal"/);
-  assert.doesNotMatch(podspec, /"Network"/);
-  assert.doesNotMatch(podspec, /"WebKit"/);
+  assert.match(podspec, /AppTrackingTransparency/);
+  assert.match(podspec, /"AdSupport"/);
+  assert.match(podspec, /"CoreTelephony"/);
+  assert.match(podspec, /"Metal"/);
+  assert.match(podspec, /"Network"/);
+  assert.match(podspec, /"WebKit"/);
   assert.match(podspec, /"Security"/);
-  assert.match(podspec, /s\.weak_frameworks = "AdServices", "StoreKit"/);
-  for (const framework of [
-    "AdSupport",
-    "CoreTelephony",
-    "Metal",
-    "Network",
-    "WebKit",
-  ]) {
+  assert.match(podspec, /s\.weak_frameworks = "AdServices", "AppTrackingTransparency", "AdSupport", "StoreKit"/);
+  for (const framework of ["AdSupport", "CoreTelephony", "Metal", "WebKit"]) {
     assert.equal(
       binary.includes(
         Buffer.from(`/System/Library/Frameworks/${framework}.framework/${framework}`)
       ),
-      false,
-      `production binary must not link ${framework}`
+      true,
+      `release binary must link ${framework}`
     );
   }
-  assert.equal(binary.includes(Buffer.from("AppTrackingTransparency.framework")), false);
+  assert.equal(binary.includes(Buffer.from("/usr/lib/swift/libswiftNetwork.dylib")), true);
+  assert.equal(binary.includes(Buffer.from("AppTrackingTransparency.framework")), true);
   assert.equal(
     binary.includes(Buffer.from("/System/Library/Frameworks/Security.framework/Security")),
     true
@@ -143,28 +129,25 @@ test("iOS package links only the production-safe native dependencies", () => {
     binary.includes(Buffer.from("/System/Library/Frameworks/StoreKit.framework/StoreKit")),
     true
   );
-  assert.equal(binary.includes(Buffer.from("ATTrackingManager")), false);
+  assert.equal(binary.includes(Buffer.from("ATTrackingManager")), true);
   assert.equal(binary.includes(Buffer.from("requestTrackingAuthorization")), false);
 });
 
-test("iOS privacy manifest declares non-tracking collection", () => {
-  const manifest = fs.readFileSync(
-    path.join(
-      projectRoot,
-      "ios/PostbackSDK.xcframework/ios-arm64/PostbackSDK.framework/PrivacyInfo.xcprivacy"
-    ),
-    "utf8"
-  );
-
-  assert.match(manifest, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
-  assert.doesNotMatch(
-    manifest,
-    /<key>NSPrivacyCollectedDataTypeTracking<\/key>\s*<true\/>/
-  );
-  assert.doesNotMatch(manifest, /NSPrivacyTrackingDomains/);
+test("iOS binary distribution does not embed a privacy manifest", () => {
+  for (const slice of ["ios-arm64", "ios-arm64_x86_64-simulator"]) {
+    assert.equal(
+      fs.existsSync(
+        path.join(
+          projectRoot,
+          `ios/PostbackSDK.xcframework/${slice}/PostbackSDK.framework/PrivacyInfo.xcprivacy`
+        )
+      ),
+      false
+    );
+  }
 });
 
-test("iOS bridge exposes lifecycle and safe metadata while omitting fingerprint signals", () => {
+test("iOS wrapper keeps the native signal collector out of its public bridge", () => {
   const swiftInterface = fs.readFileSync(
     path.join(
       projectRoot,
@@ -177,104 +160,8 @@ test("iOS bridge exposes lifecycle and safe metadata while omitting fingerprint 
     "utf8"
   );
 
-  const sourceCompatibleFields = [
-    "deviceModel",
-    "screenWidth",
-    "screenHeight",
-    "nativeScreenWidth",
-    "nativeScreenHeight",
-    "screenScale",
-    "hardwareConcurrency",
-    "processorCount",
-    "maxTouchPoints",
-    "memoryGb",
-    "lowPowerMode",
-    "batteryState",
-    "batteryLevelBucket",
-    "preferredLanguages",
-    "timezoneOffsetMinutes",
-    "deviceManufacturer",
-    "deviceBrand",
-    "deviceProduct",
-    "deviceHardware",
-    "gpuVendor",
-    "gpuRenderer",
-    "connectionType",
-    "networkType",
-    "installType",
-    "isVPN",
-    "isLowDataMode",
-    "isExpensiveNetwork",
-    "colorScheme",
-    "sdkPlatform",
-    "sdkVersion",
-    "sdkWebViewUserAgent",
-    "locale",
-    "timezone",
-    "osVersion",
-    "appVersion",
-    "idfa",
-    "idfv",
-  ];
-
-  for (const field of sourceCompatibleFields) {
-    assert.match(swiftInterface, new RegExp(`public let ${field}:`));
-  }
-
-  for (const field of [
-    "installType",
-    "sdkPlatform",
-    "sdkVersion",
-    "osVersion",
-    "appVersion",
-  ]) {
-    assert.match(bridge, new RegExp(`dict\\["${field}"\\] =`));
-  }
-
-  const omittedFields = [
-    "deviceModel",
-    "screenWidth",
-    "screenHeight",
-    "nativeScreenWidth",
-    "nativeScreenHeight",
-    "screenScale",
-    "hardwareConcurrency",
-    "processorCount",
-    "maxTouchPoints",
-    "memoryGb",
-    "lowPowerMode",
-    "batteryState",
-    "batteryLevelBucket",
-    "preferredLanguages",
-    "timezoneOffsetMinutes",
-    "deviceManufacturer",
-    "deviceBrand",
-    "deviceProduct",
-    "deviceHardware",
-    "gpuVendor",
-    "gpuRenderer",
-    "connectionType",
-    "networkType",
-    "isVPN",
-    "isLowDataMode",
-    "isExpensiveNetwork",
-    "colorScheme",
-    "sdkWebViewUserAgent",
-    "locale",
-    "timezone",
-    "idfa",
-    "idfv",
-    "carrierName",
-    "carrierCountryCode",
-    "mobileCountryCode",
-    "mobileNetworkCode",
-  ];
-
-  for (const field of omittedFields) {
-    assert.doesNotMatch(bridge, new RegExp(`dict\\["${field}"\\] =`));
-  }
-  assert.doesNotMatch(bridge, /PostbackNative\.getWebViewUserAgent\(\)/);
-  assert.match(bridge, /getWebViewUserAgent[\s\S]*?resolve\(NSNull\(\)\)/);
+  assert.doesNotMatch(swiftInterface, /PostbackNative|DeviceInfo|InstallType/);
+  assert.doesNotMatch(bridge, /PostbackNative|getDeviceInfo|getWebViewUserAgent|getAdServicesToken/);
 });
 
 test("android wrapper declares local AAR runtime dependencies", () => {
@@ -289,13 +176,5 @@ test("android wrapper declares local AAR runtime dependencies", () => {
   assert.match(gradle, /lifecycle-process:2\.10\.0/);
   assert.match(gradle, /play-services-ads-identifier:18\.3\.0/);
   assert.match(gradle, /installreferrer:installreferrer:2\.2/);
-  assert.match(bridge, /getDeviceInfo\(includeAdvertisingId = true\)/);
-  assert.match(bridge, /putString\("carrierName", it\)/);
-  assert.match(bridge, /putString\("carrierCountryCode", it\)/);
-  assert.match(bridge, /putString\("mobileCountryCode", it\)/);
-  assert.match(bridge, /putString\("mobileNetworkCode", it\)/);
-  assert.match(bridge, /putString\("gaid", it\)/);
-  assert.match(bridge, /putString\("installReferrer", it\)/);
-  assert.match(bridge, /putString\("referrerClickTimestamp", it\)/);
-  assert.match(bridge, /putString\("referrerInstallBeginTimestamp", it\)/);
+  assert.doesNotMatch(bridge, /PostbackNative|getDeviceInfo|getWebViewUserAgent|getAdServicesToken/);
 });

@@ -10,7 +10,7 @@ test("exports the documented public API", async () => {
 
   try {
     assert.ok(ctx.sdk.Postback);
-    assert.ok(ctx.sdk.NativePostback);
+    assert.equal(ctx.sdk.NativePostback, undefined);
     assert.equal(typeof ctx.sdk.Postback.configure, "function");
     assert.equal(typeof ctx.sdk.Postback.sendEvent, "function");
     assert.equal(typeof ctx.sdk.Postback.sendTestEvent, "function");
@@ -24,12 +24,6 @@ test("exports the documented public API", async () => {
     assert.equal(typeof ctx.sdk.Postback.isInitialized, "function");
     assert.equal(typeof ctx.sdk.Postback.isSdkDisabled, "function");
     assert.equal(typeof ctx.sdk.Postback.destroy, "function");
-    assert.equal(typeof ctx.sdk.NativePostback.getDeviceInfo, "function");
-    assert.equal(typeof ctx.sdk.NativePostback.getWebViewUserAgent, "function");
-    assert.equal("requestTrackingAuthorization" in ctx.sdk.NativePostback, false);
-    assert.equal("storageSet" in ctx.sdk.NativePostback, false);
-    assert.equal("storageGet" in ctx.sdk.NativePostback, false);
-    assert.equal("storageRemove" in ctx.sdk.NativePostback, false);
   } finally {
     ctx.restore();
   }
@@ -421,40 +415,6 @@ test("sendTestEvent delegates to native module", async () => {
   }
 });
 
-test("getDeviceInfo returns production iOS lifecycle and safe metadata", async () => {
-  const deviceInfo = {
-    installType: "app_update",
-    sdkPlatform: "ios",
-    sdkVersion: "1.0.0",
-    osVersion: "18.7",
-    appVersion: "1.0",
-  };
-  const ctx = createSdkTestContext({
-    resolvedValues: { getDeviceInfo: deviceInfo },
-  });
-
-  try {
-    const result = await ctx.sdk.NativePostback.getDeviceInfo();
-    assert.deepEqual(result, deviceInfo);
-  } finally {
-    ctx.restore();
-  }
-});
-
-test("getWebViewUserAgent passes through the platform-specific native result", async () => {
-  const userAgent = "Mozilla/5.0 AppleWebKit/605.1.15 Mobile/15E148";
-  const ctx = createSdkTestContext({
-    resolvedValues: { getWebViewUserAgent: userAgent },
-  });
-
-  try {
-    assert.equal(await ctx.sdk.NativePostback.getWebViewUserAgent(), userAgent);
-    assert.ok(ctx.calls.some((call) => call.method === "getWebViewUserAgent"));
-  } finally {
-    ctx.restore();
-  }
-});
-
 test("flush delegates to native module", async () => {
   const ctx = createSdkTestContext();
 
@@ -525,9 +485,6 @@ test("unsupported platforms return the documented safe fallback behavior", async
   try {
     assert.equal(await ctx.sdk.Postback.isInitialized(), false);
     assert.equal(await ctx.sdk.Postback.isSdkDisabled(), false);
-    assert.equal(await ctx.sdk.NativePostback.getAdServicesToken(), null);
-    assert.equal(await ctx.sdk.NativePostback.getWebViewUserAgent(), null);
-    assert.deepEqual(await ctx.sdk.NativePostback.getDeviceInfo(), {});
     assert.deepEqual(await ctx.sdk.Postback.getAttributionParams(), {});
     await ctx.sdk.Postback.destroy();
   } finally {

@@ -129,77 +129,6 @@ export interface TestEventResult {
   message: string;
 }
 
-/** iOS install lifecycle classification captured when the SDK starts. */
-export type InstallType =
-  | "fresh_install"
-  | "reinstall"
-  | "app_update"
-  | "sdk_added_on_update"
-  | "restore"
-  | "unknown";
-
-/**
- * Production iOS returns install lifecycle plus SDK, app, and OS metadata only.
- * Remaining optional fields are Android diagnostics or source-compatibility placeholders.
- */
-export interface DeviceInfo {
-  deviceModel?: string;
-  screenWidth?: number;
-  screenHeight?: number;
-  nativeScreenWidth?: number;
-  nativeScreenHeight?: number;
-  screenScale?: number;
-  hardwareConcurrency?: number;
-  processorCount?: number;
-  maxTouchPoints?: number;
-  memoryGb?: number;
-  lowPowerMode?: boolean;
-  batteryState?: string;
-  batteryLevelBucket?: string;
-  preferredLanguages?: string[];
-  timezoneOffsetMinutes?: number;
-  deviceManufacturer?: string;
-  deviceBrand?: string;
-  deviceProduct?: string;
-  deviceHardware?: string;
-  gpuVendor?: string;
-  gpuRenderer?: string;
-  connectionType?: string;
-  networkType?: string;
-  /** iOS only. Distinguishes a fresh install, reinstall, update, or restore. */
-  installType?: InstallType;
-  /** Reserved for source compatibility; production iOS does not return this field. */
-  isVPN?: boolean;
-  /** Reserved for source compatibility; production iOS does not return this field. */
-  isLowDataMode?: boolean;
-  /** Reserved for source compatibility; production iOS does not return this field. */
-  isExpensiveNetwork?: boolean;
-  colorScheme?: "light" | "dark";
-  /** Android only. iOS does not collect carrier/SIM metadata. */
-  carrierName?: string;
-  /** Android only. iOS does not collect carrier/SIM metadata. */
-  carrierCountryCode?: string;
-  /** Android only. iOS does not collect carrier/SIM metadata. */
-  mobileCountryCode?: string;
-  /** Android only. iOS does not collect carrier/SIM metadata. */
-  mobileNetworkCode?: string;
-  sdkPlatform?: string;
-  sdkVersion?: string;
-  sdkWebViewUserAgent?: string;
-  locale?: string;
-  timezone?: string;
-  osVersion?: string;
-  appVersion?: string;
-  gaid?: string;
-  installReferrer?: string;
-  referrerClickTimestamp?: string;
-  referrerInstallBeginTimestamp?: string;
-  /** Reserved for source compatibility; production iOS does not return IDFA. */
-  idfa?: string;
-  /** Reserved for source compatibility; production iOS does not return IDFV. */
-  idfv?: string;
-}
-
 export interface NativePostbackModule {
   // Core SDK (delegates to precompiled binary)
   configure(config: Record<string, unknown>): Promise<boolean>;
@@ -222,9 +151,4 @@ export interface NativePostbackModule {
   isInitialized(): Promise<boolean>;
   isSdkDisabled(): Promise<boolean>;
   destroy(): Promise<void>;
-
-  // Utility
-  getDeviceInfo(): Promise<DeviceInfo>;
-  getWebViewUserAgent(): Promise<string | null>;
-  getAdServicesToken(): Promise<string | null>;
 }

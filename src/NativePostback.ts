@@ -40,15 +40,6 @@ const unsupportedPlatformModule: NativePostbackModule = {
     return false;
   },
   async destroy() {},
-  async getDeviceInfo() {
-    return {};
-  },
-  async getWebViewUserAgent() {
-    return null;
-  },
-  async getAdServicesToken() {
-    return null;
-  },
 };
 
 const NativePostback: NativePostbackModule =

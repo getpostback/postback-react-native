@@ -1,1 +1,1 @@
-{"version":3,"file":"NativePostback.d.ts","sourceRoot":"","sources":["../../src/NativePostback.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,oBAAoB,EAAE,MAAM,SAAS,CAAC;AAoDpD,QAAA,MAAM,cAAc,EAAE,oBAQS,CAAC;AAEhC,OAAO,EAAE,cAAc,EAAE,CAAC"}
+{"version":3,"file":"NativePostback.d.ts","sourceRoot":"","sources":["../../src/NativePostback.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,oBAAoB,EAAE,MAAM,SAAS,CAAC;AA2CpD,QAAA,MAAM,cAAc,EAAE,oBAQS,CAAC;AAEhC,OAAO,EAAE,cAAc,EAAE,CAAC"}

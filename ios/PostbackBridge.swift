@@ -221,35 +221,6 @@ class PostbackBridge: NSObject {
     }
   }
 
-  // MARK: - Utility
-
-  @objc func getDeviceInfo(_ resolve: @escaping RCTPromiseResolveBlock,
-                           rejecter reject: @escaping RCTPromiseRejectBlock) {
-    Task { @MainActor in
-      let info = PostbackNative.getDeviceInfo()
-      // Keep the public bridge on the production allowlist even though the
-      // native collector also returns experimental compatibility fields as nil.
-      var dict: [String: Any] = [:]
-      if let value = info.installType { dict["installType"] = value.rawValue }
-      if let value = info.sdkPlatform { dict["sdkPlatform"] = value }
-      if let value = info.sdkVersion { dict["sdkVersion"] = value }
-      if let o = info.osVersion { dict["osVersion"] = o }
-      if let appVersion = info.appVersion { dict["appVersion"] = appVersion }
-      resolve(dict)
-    }
-  }
-
-  @objc func getWebViewUserAgent(_ resolve: @escaping RCTPromiseResolveBlock,
-                                 rejecter reject: @escaping RCTPromiseRejectBlock) {
-    resolve(NSNull())
-  }
-
-  @objc func getAdServicesToken(_ resolve: @escaping RCTPromiseResolveBlock,
-                                rejecter reject: @escaping RCTPromiseRejectBlock) {
-    let token = PostbackNative.getAdServicesToken()
-    resolve(token as Any)
-  }
-
   private static func attributionToDictionary(_ attr: AttributionResult) -> [String: Any] {
     var dict: [String: Any] = [
       "isAttributed": attr.isAttributed,

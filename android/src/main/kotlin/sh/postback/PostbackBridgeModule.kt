@@ -3,7 +3,6 @@ package sh.postback
 import sh.postback.sdk.Postback
 import sh.postback.sdk.PostbackConfig
 import sh.postback.sdk.PostbackEventType
-import sh.postback.sdk.PostbackNative
 import sh.postback.sdk.AttributionResult
 import sh.postback.sdk.GoogleAdsConsent
 import sh.postback.sdk.GoogleAdsConsentStatus
@@ -260,77 +259,6 @@ class PostbackBridgeModule(reactContext: ReactApplicationContext) : ReactContext
             sdk().destroy()
             promise.resolve(null)
         }
-    }
-
-    // Utility
-
-    @ReactMethod
-    fun getDeviceInfo(promise: Promise) {
-        runAsync("DEVICE_INFO_ERROR", promise) {
-            val deviceInfo = PostbackNative(reactApplicationContext).getDeviceInfo(includeAdvertisingId = true)
-            val info = Arguments.createMap()
-            deviceInfo.deviceModel?.let { info.putString("deviceModel", it) }
-            deviceInfo.screenWidth?.let { info.putInt("screenWidth", it) }
-            deviceInfo.screenHeight?.let { info.putInt("screenHeight", it) }
-            deviceInfo.nativeScreenWidth?.let { info.putInt("nativeScreenWidth", it) }
-            deviceInfo.nativeScreenHeight?.let { info.putInt("nativeScreenHeight", it) }
-            deviceInfo.screenScale?.let { info.putDouble("screenScale", it) }
-            deviceInfo.hardwareConcurrency?.let { info.putInt("hardwareConcurrency", it) }
-            deviceInfo.processorCount?.let { info.putInt("processorCount", it) }
-            deviceInfo.maxTouchPoints?.let { info.putInt("maxTouchPoints", it) }
-            deviceInfo.memoryGb?.let { info.putInt("memoryGb", it) }
-            deviceInfo.lowPowerMode?.let { info.putBoolean("lowPowerMode", it) }
-            deviceInfo.batteryState?.let { info.putString("batteryState", it) }
-            deviceInfo.batteryLevelBucket?.let { info.putString("batteryLevelBucket", it) }
-            deviceInfo.preferredLanguages?.let { languages ->
-                val array = Arguments.createArray()
-                languages.forEach { array.pushString(it) }
-                info.putArray("preferredLanguages", array)
-            }
-            deviceInfo.timezoneOffsetMinutes?.let { info.putInt("timezoneOffsetMinutes", it) }
-            deviceInfo.deviceManufacturer?.let { info.putString("deviceManufacturer", it) }
-            deviceInfo.deviceBrand?.let { info.putString("deviceBrand", it) }
-            deviceInfo.deviceProduct?.let { info.putString("deviceProduct", it) }
-            deviceInfo.deviceHardware?.let { info.putString("deviceHardware", it) }
-            deviceInfo.gpuVendor?.let { info.putString("gpuVendor", it) }
-            deviceInfo.gpuRenderer?.let { info.putString("gpuRenderer", it) }
-            deviceInfo.connectionType?.let { info.putString("connectionType", it) }
-            deviceInfo.networkType?.let { info.putString("networkType", it) }
-            deviceInfo.colorScheme?.let { info.putString("colorScheme", it) }
-            deviceInfo.carrierName?.let { info.putString("carrierName", it) }
-            deviceInfo.carrierCountryCode?.let { info.putString("carrierCountryCode", it) }
-            deviceInfo.mobileCountryCode?.let { info.putString("mobileCountryCode", it) }
-            deviceInfo.mobileNetworkCode?.let { info.putString("mobileNetworkCode", it) }
-            deviceInfo.sdkPlatform?.let { info.putString("sdkPlatform", it) }
-            deviceInfo.sdkVersion?.let { info.putString("sdkVersion", it) }
-            deviceInfo.sdkWebViewUserAgent?.let { info.putString("sdkWebViewUserAgent", it) }
-            deviceInfo.locale?.let { info.putString("locale", it) }
-            deviceInfo.timezone?.let { info.putString("timezone", it) }
-            deviceInfo.osVersion?.let { info.putString("osVersion", it) }
-            deviceInfo.appVersion?.let { info.putString("appVersion", it) }
-            deviceInfo.gaid?.let { info.putString("gaid", it) }
-            deviceInfo.installReferrer?.let { info.putString("installReferrer", it) }
-            deviceInfo.referrerClickTimestamp?.let { info.putString("referrerClickTimestamp", it) }
-            deviceInfo.referrerInstallBeginTimestamp?.let {
-                info.putString("referrerInstallBeginTimestamp", it)
-            }
-            promise.resolve(info)
-        }
-    }
-
-    @ReactMethod
-    fun getWebViewUserAgent(promise: Promise) {
-        runAsync("WEBVIEW_USER_AGENT_ERROR", promise) {
-            val userAgent = PostbackNative(reactApplicationContext)
-                .getDeviceInfo(includeAdvertisingId = false)
-                .sdkWebViewUserAgent
-            promise.resolve(userAgent)
-        }
-    }
-
-    @ReactMethod
-    fun getAdServicesToken(promise: Promise) {
-        promise.resolve(null) // iOS only
     }
 
     override fun invalidate() {
