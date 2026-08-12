@@ -99,7 +99,7 @@ test("android permissions are packaged for consumers", () => {
   assert.doesNotMatch(plugin, /trackingDescription/);
 });
 
-test("iOS package supports opportunistic IDFA without an ATT dependency", () => {
+test("iOS package links only the production-safe native dependencies", () => {
   const podspec = fs.readFileSync(
     path.join(projectRoot, "postback-react-native.podspec"),
     "utf8"
@@ -112,15 +112,28 @@ test("iOS package supports opportunistic IDFA without an ATT dependency", () => 
   );
 
   assert.doesNotMatch(podspec, /AppTrackingTransparency/);
-  assert.match(podspec, /"AdSupport"/);
+  assert.doesNotMatch(podspec, /"AdSupport"/);
+  assert.doesNotMatch(podspec, /"CoreTelephony"/);
+  assert.doesNotMatch(podspec, /"Metal"/);
+  assert.doesNotMatch(podspec, /"Network"/);
+  assert.doesNotMatch(podspec, /"WebKit"/);
   assert.match(podspec, /"Security"/);
   assert.match(podspec, /s\.weak_frameworks = "AdServices", "StoreKit"/);
-  assert.equal(
-    binary.includes(
-      Buffer.from("/System/Library/Frameworks/AdSupport.framework/AdSupport")
-    ),
-    true
-  );
+  for (const framework of [
+    "AdSupport",
+    "CoreTelephony",
+    "Metal",
+    "Network",
+    "WebKit",
+  ]) {
+    assert.equal(
+      binary.includes(
+        Buffer.from(`/System/Library/Frameworks/${framework}.framework/${framework}`)
+      ),
+      false,
+      `production binary must not link ${framework}`
+    );
+  }
   assert.equal(binary.includes(Buffer.from("AppTrackingTransparency.framework")), false);
   assert.equal(
     binary.includes(Buffer.from("/System/Library/Frameworks/Security.framework/Security")),
@@ -134,7 +147,7 @@ test("iOS package supports opportunistic IDFA without an ATT dependency", () => 
   assert.equal(binary.includes(Buffer.from("requestTrackingAuthorization")), false);
 });
 
-test("iOS privacy manifest declares tracking without a tracking-domain list", () => {
+test("iOS privacy manifest declares non-tracking collection", () => {
   const manifest = fs.readFileSync(
     path.join(
       projectRoot,
@@ -143,11 +156,15 @@ test("iOS privacy manifest declares tracking without a tracking-domain list", ()
     "utf8"
   );
 
-  assert.match(manifest, /<key>NSPrivacyTracking<\/key>\s*<true\/>/);
+  assert.match(manifest, /<key>NSPrivacyTracking<\/key>\s*<false\/>/);
+  assert.doesNotMatch(
+    manifest,
+    /<key>NSPrivacyCollectedDataTypeTracking<\/key>\s*<true\/>/
+  );
   assert.doesNotMatch(manifest, /NSPrivacyTrackingDomains/);
 });
 
-test("iOS package exposes its signal bundle without carrier metadata", () => {
+test("iOS bridge exposes lifecycle and safe metadata while omitting fingerprint signals", () => {
   const swiftInterface = fs.readFileSync(
     path.join(
       projectRoot,
@@ -160,7 +177,7 @@ test("iOS package exposes its signal bundle without carrier metadata", () => {
     "utf8"
   );
 
-  const expectedFields = [
+  const sourceCompatibleFields = [
     "deviceModel",
     "screenWidth",
     "screenHeight",
@@ -200,26 +217,64 @@ test("iOS package exposes its signal bundle without carrier metadata", () => {
     "idfv",
   ];
 
-  for (const field of expectedFields) {
+  for (const field of sourceCompatibleFields) {
     assert.match(swiftInterface, new RegExp(`public let ${field}:`));
+  }
+
+  for (const field of [
+    "installType",
+    "sdkPlatform",
+    "sdkVersion",
+    "osVersion",
+    "appVersion",
+  ]) {
     assert.match(bridge, new RegExp(`dict\\["${field}"\\] =`));
   }
 
-  const deprecatedCarrierFields = [
+  const omittedFields = [
+    "deviceModel",
+    "screenWidth",
+    "screenHeight",
+    "nativeScreenWidth",
+    "nativeScreenHeight",
+    "screenScale",
+    "hardwareConcurrency",
+    "processorCount",
+    "maxTouchPoints",
+    "memoryGb",
+    "lowPowerMode",
+    "batteryState",
+    "batteryLevelBucket",
+    "preferredLanguages",
+    "timezoneOffsetMinutes",
+    "deviceManufacturer",
+    "deviceBrand",
+    "deviceProduct",
+    "deviceHardware",
+    "gpuVendor",
+    "gpuRenderer",
+    "connectionType",
+    "networkType",
+    "isVPN",
+    "isLowDataMode",
+    "isExpensiveNetwork",
+    "colorScheme",
+    "sdkWebViewUserAgent",
+    "locale",
+    "timezone",
+    "idfa",
+    "idfv",
     "carrierName",
     "carrierCountryCode",
     "mobileCountryCode",
     "mobileNetworkCode",
   ];
 
-  for (const field of deprecatedCarrierFields) {
-    assert.match(swiftInterface, new RegExp(`public var ${field}:`));
+  for (const field of omittedFields) {
     assert.doesNotMatch(bridge, new RegExp(`dict\\["${field}"\\] =`));
   }
-  assert.match(
-    swiftInterface,
-    /deprecated, message: "Carrier identity is not collected or transmitted by the iOS SDK\."/
-  );
+  assert.doesNotMatch(bridge, /PostbackNative\.getWebViewUserAgent\(\)/);
+  assert.match(bridge, /getWebViewUserAgent[\s\S]*?resolve\(NSNull\(\)\)/);
 });
 
 test("android wrapper declares local AAR runtime dependencies", () => {

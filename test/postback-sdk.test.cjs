@@ -421,30 +421,9 @@ test("sendTestEvent delegates to native module", async () => {
   }
 });
 
-test("getDeviceInfo returns the iOS signal bundle", async () => {
+test("getDeviceInfo returns production iOS lifecycle and safe metadata", async () => {
   const deviceInfo = {
-    deviceModel: "iPhone17,1",
-    screenWidth: 1179,
-    screenHeight: 2556,
-    screenScale: 3,
-    hardwareConcurrency: 6,
-    memoryGb: 8,
-    batteryState: "charging",
-    preferredLanguages: ["en-US", "fr-FR"],
-    timezoneOffsetMinutes: 120,
-    gpuVendor: "Apple",
-    gpuRenderer: "Apple GPU",
-    connectionType: "cellular",
-    networkType: "5g",
     installType: "app_update",
-    isVPN: true,
-    isLowDataMode: false,
-    isExpensiveNetwork: true,
-    sdkWebViewUserAgent: "Mozilla/5.0 AppleWebKit/605.1.15 Mobile/15E148",
-    locale: "en-FR",
-    timezone: "Europe/Paris",
-    idfa: "11111111-2222-3333-4444-555555555555",
-    idfv: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
     sdkPlatform: "ios",
     sdkVersion: "1.0.0",
     osVersion: "18.7",
@@ -462,7 +441,7 @@ test("getDeviceInfo returns the iOS signal bundle", async () => {
   }
 });
 
-test("getWebViewUserAgent delegates to the native module", async () => {
+test("getWebViewUserAgent passes through the platform-specific native result", async () => {
   const userAgent = "Mozilla/5.0 AppleWebKit/605.1.15 Mobile/15E148";
   const ctx = createSdkTestContext({
     resolvedValues: { getWebViewUserAgent: userAgent },

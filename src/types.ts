@@ -138,6 +138,10 @@ export type InstallType =
   | "restore"
   | "unknown";
 
+/**
+ * Production iOS returns install lifecycle plus SDK, app, and OS metadata only.
+ * Remaining optional fields are Android diagnostics or source-compatibility placeholders.
+ */
 export interface DeviceInfo {
   deviceModel?: string;
   screenWidth?: number;
@@ -164,11 +168,11 @@ export interface DeviceInfo {
   networkType?: string;
   /** iOS only. Distinguishes a fresh install, reinstall, update, or restore. */
   installType?: InstallType;
-  /** iOS only. Whether a VPN or tunnel interface is active. */
+  /** Reserved for source compatibility; production iOS does not return this field. */
   isVPN?: boolean;
-  /** iOS only. Whether Low Data Mode constrains the active network path. */
+  /** Reserved for source compatibility; production iOS does not return this field. */
   isLowDataMode?: boolean;
-  /** iOS only. Whether the active network path is considered expensive. */
+  /** Reserved for source compatibility; production iOS does not return this field. */
   isExpensiveNetwork?: boolean;
   colorScheme?: "light" | "dark";
   /** Android only. iOS does not collect carrier/SIM metadata. */
@@ -190,7 +194,9 @@ export interface DeviceInfo {
   installReferrer?: string;
   referrerClickTimestamp?: string;
   referrerInstallBeginTimestamp?: string;
+  /** Reserved for source compatibility; production iOS does not return IDFA. */
   idfa?: string;
+  /** Reserved for source compatibility; production iOS does not return IDFV. */
   idfv?: string;
 }
 
