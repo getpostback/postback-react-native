@@ -7,6 +7,7 @@ export type {
   EventParams,
   AttributionResult,
   InstallResponse,
+  InstallType,
   DeviceInfo,
   LogLevel,
   TestEventResult,

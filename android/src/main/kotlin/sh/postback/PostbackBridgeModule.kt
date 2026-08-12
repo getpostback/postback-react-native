@@ -309,7 +309,22 @@ class PostbackBridgeModule(reactContext: ReactApplicationContext) : ReactContext
             deviceInfo.osVersion?.let { info.putString("osVersion", it) }
             deviceInfo.appVersion?.let { info.putString("appVersion", it) }
             deviceInfo.gaid?.let { info.putString("gaid", it) }
+            deviceInfo.installReferrer?.let { info.putString("installReferrer", it) }
+            deviceInfo.referrerClickTimestamp?.let { info.putString("referrerClickTimestamp", it) }
+            deviceInfo.referrerInstallBeginTimestamp?.let {
+                info.putString("referrerInstallBeginTimestamp", it)
+            }
             promise.resolve(info)
+        }
+    }
+
+    @ReactMethod
+    fun getWebViewUserAgent(promise: Promise) {
+        runAsync("WEBVIEW_USER_AGENT_ERROR", promise) {
+            val userAgent = PostbackNative(reactApplicationContext)
+                .getDeviceInfo(includeAdvertisingId = false)
+                .sdkWebViewUserAgent
+            promise.resolve(userAgent)
         }
     }
 

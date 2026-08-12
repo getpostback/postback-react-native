@@ -38,6 +38,29 @@ test("package metadata reflects the binary-backed distribution contract", () => 
   assert.deepEqual(packageJson.expo?.plugins, ["./app.plugin.js"]);
 });
 
+test("generated TypeScript declarations export install lifecycle types", () => {
+  const indexDeclarations = fs.readFileSync(
+    path.join(projectRoot, "lib/typescript/index.d.ts"),
+    "utf8"
+  );
+  const typeDeclarations = fs.readFileSync(
+    path.join(projectRoot, "lib/typescript/types.d.ts"),
+    "utf8"
+  );
+
+  assert.match(indexDeclarations, /InstallType/);
+  for (const value of [
+    "fresh_install",
+    "reinstall",
+    "app_update",
+    "sdk_added_on_update",
+    "restore",
+    "unknown",
+  ]) {
+    assert.match(typeDeclarations, new RegExp(`"${value}"`));
+  }
+});
+
 test("podspec resolves npm repository metadata to a CocoaPods git URL", () => {
   const podspec = fs.readFileSync(
     path.join(projectRoot, "postback-react-native.podspec"),
@@ -76,23 +99,148 @@ test("android permissions are packaged for consumers", () => {
   assert.doesNotMatch(plugin, /trackingDescription/);
 });
 
-test("iOS package does not link ATT or advertising identifier frameworks", () => {
+test("iOS package supports opportunistic IDFA without an ATT dependency", () => {
   const podspec = fs.readFileSync(
     path.join(projectRoot, "postback-react-native.podspec"),
     "utf8"
   );
+  const binary = fs.readFileSync(
+    path.join(
+      projectRoot,
+      "ios/PostbackSDK.xcframework/ios-arm64/PostbackSDK.framework/PostbackSDK"
+    )
+  );
 
   assert.doesNotMatch(podspec, /AppTrackingTransparency/);
-  assert.doesNotMatch(podspec, /AdSupport/);
-  assert.match(podspec, /s\.weak_frameworks = "AdServices"/);
+  assert.match(podspec, /"AdSupport"/);
+  assert.match(podspec, /"Security"/);
+  assert.match(podspec, /s\.weak_frameworks = "AdServices", "StoreKit"/);
+  assert.equal(
+    binary.includes(
+      Buffer.from("/System/Library/Frameworks/AdSupport.framework/AdSupport")
+    ),
+    true
+  );
+  assert.equal(binary.includes(Buffer.from("AppTrackingTransparency.framework")), false);
+  assert.equal(
+    binary.includes(Buffer.from("/System/Library/Frameworks/Security.framework/Security")),
+    true
+  );
+  assert.equal(
+    binary.includes(Buffer.from("/System/Library/Frameworks/StoreKit.framework/StoreKit")),
+    true
+  );
+  assert.equal(binary.includes(Buffer.from("ATTrackingManager")), false);
+  assert.equal(binary.includes(Buffer.from("requestTrackingAuthorization")), false);
+});
+
+test("iOS privacy manifest declares tracking without a tracking-domain list", () => {
+  const manifest = fs.readFileSync(
+    path.join(
+      projectRoot,
+      "ios/PostbackSDK.xcframework/ios-arm64/PostbackSDK.framework/PrivacyInfo.xcprivacy"
+    ),
+    "utf8"
+  );
+
+  assert.match(manifest, /<key>NSPrivacyTracking<\/key>\s*<true\/>/);
+  assert.doesNotMatch(manifest, /NSPrivacyTrackingDomains/);
+});
+
+test("iOS package exposes its signal bundle without carrier metadata", () => {
+  const swiftInterface = fs.readFileSync(
+    path.join(
+      projectRoot,
+      "ios/PostbackSDK.xcframework/ios-arm64/PostbackSDK.framework/Modules/PostbackSDK.swiftmodule/arm64-apple-ios.swiftinterface"
+    ),
+    "utf8"
+  );
+  const bridge = fs.readFileSync(
+    path.join(projectRoot, "ios/PostbackBridge.swift"),
+    "utf8"
+  );
+
+  const expectedFields = [
+    "deviceModel",
+    "screenWidth",
+    "screenHeight",
+    "nativeScreenWidth",
+    "nativeScreenHeight",
+    "screenScale",
+    "hardwareConcurrency",
+    "processorCount",
+    "maxTouchPoints",
+    "memoryGb",
+    "lowPowerMode",
+    "batteryState",
+    "batteryLevelBucket",
+    "preferredLanguages",
+    "timezoneOffsetMinutes",
+    "deviceManufacturer",
+    "deviceBrand",
+    "deviceProduct",
+    "deviceHardware",
+    "gpuVendor",
+    "gpuRenderer",
+    "connectionType",
+    "networkType",
+    "installType",
+    "isVPN",
+    "isLowDataMode",
+    "isExpensiveNetwork",
+    "colorScheme",
+    "sdkPlatform",
+    "sdkVersion",
+    "sdkWebViewUserAgent",
+    "locale",
+    "timezone",
+    "osVersion",
+    "appVersion",
+    "idfa",
+    "idfv",
+  ];
+
+  for (const field of expectedFields) {
+    assert.match(swiftInterface, new RegExp(`public let ${field}:`));
+    assert.match(bridge, new RegExp(`dict\\["${field}"\\] =`));
+  }
+
+  const deprecatedCarrierFields = [
+    "carrierName",
+    "carrierCountryCode",
+    "mobileCountryCode",
+    "mobileNetworkCode",
+  ];
+
+  for (const field of deprecatedCarrierFields) {
+    assert.match(swiftInterface, new RegExp(`public var ${field}:`));
+    assert.doesNotMatch(bridge, new RegExp(`dict\\["${field}"\\] =`));
+  }
+  assert.match(
+    swiftInterface,
+    /deprecated, message: "Carrier identity is not collected or transmitted by the iOS SDK\."/
+  );
 });
 
 test("android wrapper declares local AAR runtime dependencies", () => {
   const gradle = fs.readFileSync(path.join(projectRoot, "android/build.gradle"), "utf8");
+  const bridge = fs.readFileSync(
+    path.join(projectRoot, "android/src/main/kotlin/sh/postback/PostbackBridgeModule.kt"),
+    "utf8"
+  );
 
   assert.match(gradle, /rootProject\.allprojects/);
   assert.match(gradle, /implementation\(name: 'postback-sdk', ext: 'aar'\)/);
   assert.match(gradle, /lifecycle-process:2\.10\.0/);
   assert.match(gradle, /play-services-ads-identifier:18\.3\.0/);
   assert.match(gradle, /installreferrer:installreferrer:2\.2/);
+  assert.match(bridge, /getDeviceInfo\(includeAdvertisingId = true\)/);
+  assert.match(bridge, /putString\("carrierName", it\)/);
+  assert.match(bridge, /putString\("carrierCountryCode", it\)/);
+  assert.match(bridge, /putString\("mobileCountryCode", it\)/);
+  assert.match(bridge, /putString\("mobileNetworkCode", it\)/);
+  assert.match(bridge, /putString\("gaid", it\)/);
+  assert.match(bridge, /putString\("installReferrer", it\)/);
+  assert.match(bridge, /putString\("referrerClickTimestamp", it\)/);
+  assert.match(bridge, /putString\("referrerInstallBeginTimestamp", it\)/);
 });

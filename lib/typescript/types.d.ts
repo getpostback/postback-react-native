@@ -71,6 +71,8 @@ export interface TestEventResult {
     success: boolean;
     message: string;
 }
+/** iOS install lifecycle classification captured when the SDK starts. */
+export type InstallType = "fresh_install" | "reinstall" | "app_update" | "sdk_added_on_update" | "restore" | "unknown";
 export interface DeviceInfo {
     deviceModel?: string;
     screenWidth?: number;
@@ -95,10 +97,22 @@ export interface DeviceInfo {
     gpuRenderer?: string;
     connectionType?: string;
     networkType?: string;
+    /** iOS only. Distinguishes a fresh install, reinstall, update, or restore. */
+    installType?: InstallType;
+    /** iOS only. Whether a VPN or tunnel interface is active. */
+    isVPN?: boolean;
+    /** iOS only. Whether Low Data Mode constrains the active network path. */
+    isLowDataMode?: boolean;
+    /** iOS only. Whether the active network path is considered expensive. */
+    isExpensiveNetwork?: boolean;
     colorScheme?: "light" | "dark";
+    /** Android only. iOS does not collect carrier/SIM metadata. */
     carrierName?: string;
+    /** Android only. iOS does not collect carrier/SIM metadata. */
     carrierCountryCode?: string;
+    /** Android only. iOS does not collect carrier/SIM metadata. */
     mobileCountryCode?: string;
+    /** Android only. iOS does not collect carrier/SIM metadata. */
     mobileNetworkCode?: string;
     sdkPlatform?: string;
     sdkVersion?: string;
@@ -108,6 +122,11 @@ export interface DeviceInfo {
     osVersion?: string;
     appVersion?: string;
     gaid?: string;
+    installReferrer?: string;
+    referrerClickTimestamp?: string;
+    referrerInstallBeginTimestamp?: string;
+    idfa?: string;
+    idfv?: string;
 }
 export interface NativePostbackModule {
     configure(config: Record<string, unknown>): Promise<boolean>;
@@ -125,6 +144,7 @@ export interface NativePostbackModule {
     isSdkDisabled(): Promise<boolean>;
     destroy(): Promise<void>;
     getDeviceInfo(): Promise<DeviceInfo>;
+    getWebViewUserAgent(): Promise<string | null>;
     getAdServicesToken(): Promise<string | null>;
 }
 //# sourceMappingURL=types.d.ts.map

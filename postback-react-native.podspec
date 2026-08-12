@@ -24,6 +24,6 @@ Pod::Spec.new do |s|
   s.dependency "React-Core"
 
   s.ios.vendored_frameworks = "ios/PostbackSDK.xcframework"
-  s.frameworks = "Foundation", "UIKit", "CryptoKit"
-  s.weak_frameworks = "AdServices"
+  s.frameworks = "Foundation", "UIKit", "AdSupport", "CoreTelephony", "Metal", "Network", "WebKit", "CoreGraphics", "CryptoKit", "Security"
+  s.weak_frameworks = "AdServices", "StoreKit"
 end
